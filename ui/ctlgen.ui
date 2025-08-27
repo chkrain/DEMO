@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>168</width>
-    <height>64</height>
+    <width>117</width>
+    <height>51</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,6 +47,9 @@ QLabel {
   <property name="isWorking" stdset="0">
    <string>isWorking</string>
   </property>
+  <property name="start" stdset="0">
+   <bool>false</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
     <number>4</number>
@@ -60,8 +63,31 @@ QLabel {
    <property name="bottomMargin">
     <number>4</number>
    </property>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="work">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap>img/ПРОЦ СЕР111.png</pixmap>
+     </property>
+     <property name="style" stdset="0">
+      <string>process</string>
+     </property>
+     <property name="isWork" stdset="0">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="manual">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -79,21 +105,8 @@ QLabel {
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="5">
-    <widget class="QLabel" name="label">
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="text">
-      <string>Текст</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>text</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="pushButton_2">
+   <item row="2" column="0">
+    <widget class="QPushButton" name="button_start">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -101,31 +114,19 @@ QLabel {
       <string notr="true"/>
      </property>
      <property name="text">
-      <string>СТАРТ</string>
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset theme="start">
+       <normaloff>.</normaloff>.</iconset>
      </property>
      <property name="style" stdset="0">
       <string>start</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string/>
-     </property>
-     <property name="pixmap">
-      <pixmap>img/ПРОЦ СЕР111.png</pixmap>
-     </property>
-     <property name="style" stdset="0">
-      <string>process</string>
-     </property>
-     <property name="isWork" stdset="0">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="3">
-    <widget class="QPushButton" name="pushButton">
+   <item row="2" column="1">
+    <widget class="QPushButton" name="button_stop">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
        <horstretch>0</horstretch>
@@ -136,7 +137,11 @@ QLabel {
       <string notr="true"/>
      </property>
      <property name="text">
-      <string>СТОП</string>
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset theme="stop">
+       <normaloff>.</normaloff>.</iconset>
      </property>
      <property name="style" stdset="0">
       <string>stop</string>

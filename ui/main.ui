@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>930</height>
+    <width>1903</width>
+    <height>921</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,703 +27,358 @@ QPushButton:pressed[style=&quot;start&quot;]
 {
 	background-color: green;
 }
+QPushButton:pressed[style=&quot;stop&quot;]
+{
+	background-color: red;
+}
 QPushButton[style=&quot;start&quot;] {
 	background-color: red;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidget">
+   <widget class="Animation" name="M1">
     <property name="geometry">
      <rect>
-      <x>9</x>
-      <y>9</y>
-      <width>624</width>
-      <height>887</height>
+      <x>1600</x>
+      <y>120</y>
+      <width>201</width>
+      <height>204</height>
      </rect>
     </property>
-    <property name="autoFillBackground">
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/tconveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
      <bool>false</bool>
     </property>
+   </widget>
+   <widget class="Animation" name="animation">
+    <property name="geometry">
+     <rect>
+      <x>1600</x>
+      <y>320</y>
+      <width>177</width>
+      <height>175</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_2">
+    <property name="geometry">
+     <rect>
+      <x>1400</x>
+      <y>500</y>
+      <width>392</width>
+      <height>54</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_3">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1340</x>
+      <y>330</y>
+      <width>175</width>
+      <height>154</height>
+     </rect>
+    </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>246</red>
+          <green>97</green>
+          <blue>81</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>246</red>
+          <green>97</green>
+          <blue>81</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Light">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>246</red>
+          <green>97</green>
+          <blue>81</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/in_container.png</string>
+     </url>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_4">
+    <property name="geometry">
+     <rect>
+      <x>1110</x>
+      <y>190</y>
+      <width>201</width>
+      <height>204</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/tconveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_7">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>20</y>
+      <width>177</width>
+      <height>175</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
+     </url>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_9">
+    <property name="geometry">
+     <rect>
+      <x>1000</x>
+      <y>500</y>
+      <width>392</width>
+      <height>54</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_10">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>190</y>
+      <width>758</width>
+      <height>287</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/drum.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_11">
+    <property name="geometry">
+     <rect>
+      <x>950</x>
+      <y>320</y>
+      <width>177</width>
+      <height>175</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_12">
+    <property name="geometry">
+     <rect>
+      <x>770</x>
+      <y>70</y>
+      <width>392</width>
+      <height>54</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_5">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>680</y>
+      <width>9</width>
+      <height>18</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="Animation" name="animation_8">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>490</y>
+      <width>298</width>
+      <height>396</height>
+     </rect>
+    </property>
     <property name="styleSheet">
-     <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
+     <string notr="true"/>
     </property>
-    <property name="currentIndex">
-     <number>0</number>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/resources/exhaust.png</string>
+     </url>
     </property>
-    <widget class="QWidget" name="tab">
-     <attribute name="title">
-      <string>Tab 1</string>
-     </attribute>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
-       <widget class="CtlGen" name="ctlgen_4">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="CtlGen" name="ctlgen_14">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="0">
-       <widget class="CtlGen" name="ctlgen_17">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="CtlGen" name="ctlgen_8">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="CtlGen" name="ctlgen_15">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="CtlGen" name="ctlgen_12">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="CtlGen" name="ctlgen_11">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="CtlGen" name="ctlgen_6">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="CtlGen" name="ctlgen_16">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="CtlGen" name="m_1">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="CtlGen" name="ctlgen_10">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="CtlGen" name="ctlgen_5">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="CtlGen" name="ctlgen_2">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="CtlGen" name="ctlgen_9">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="CtlGen" name="ctlgen_7">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="CtlGen" name="ctlgen">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="CtlGen" name="ctlgen_13">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="CtlGen" name="ctlgen_18">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="0">
-       <widget class="CtlGen" name="ctlgen_19">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="CtlGen" name="ctlgen_20">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="CtlGen" name="ctlgen_21">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="CtlGen" name="ctlgen_22">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1">
-       <widget class="CtlGen" name="ctlgen_23">
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QWidget {
-	background: rgb(217 217 217);
-	border-radius: 4%;
-}
-QPushButton {
-	border: none;
-	background-color: rgb(255, 255, 255);
-}
-QPushButton:pressed[style=&quot;start&quot;] {
-	background-color: rgb(184 255 188);
-}
-QPushButton:pressed[style=&quot;stop&quot;] {
-	background-color: rgb(184 255 188);
-}
-
-QLabel {
-	background-color: rgb(255, 255, 255);
-}
-</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="tab_2">
-     <attribute name="title">
-      <string>Tab 2</string>
-     </attribute>
-    </widget>
+   </widget>
+   <widget class="Animation" name="animation_13">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>500</y>
+      <width>392</width>
+      <height>54</height>
+     </rect>
+    </property>
+    <property name="source">
+     <url>
+      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
+     </url>
+    </property>
+    <property name="running">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pu_1_start">
+    <property name="geometry">
+     <rect>
+      <x>1540</x>
+      <y>50</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>СТАРТ ПУ1</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pu_1_stop">
+    <property name="geometry">
+     <rect>
+      <x>1540</x>
+      <y>90</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>СТОП ПУ1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pu_2_start">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>110</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>СТАРТ ПУ2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pu_2_stop">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>150</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>СТОП ПУ2</string>
+    </property>
+   </widget>
+   <widget class="CtlGen" name="ctlgen_2">
+    <property name="geometry">
+     <rect>
+      <x>1330</x>
+      <y>230</y>
+      <width>265</width>
+      <height>77</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1350</x>
+      <y>590</y>
+      <width>175</width>
+      <height>154</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../img/resources/in_container.png</pixmap>
+    </property>
    </widget>
   </widget>
  </widget>
@@ -732,6 +387,12 @@ QLabel {
    <class>CtlGen</class>
    <extends>QWidget</extends>
    <header>customplugin</header>
+  </customwidget>
+  <customwidget>
+   <class>Animation</class>
+   <extends>QLabel</extends>
+   <header>pygui.animation</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
