@@ -4,3 +4,6 @@
 [submodule "pysca.git"]
 	path = pysca.git
 	url = https://github.com/vlinnik/pysca.git
+[submodule "umodbus.git"]
+	path = umodbus.git
+	url = https://github.com/brainelectronics/micropython-modbus.git
