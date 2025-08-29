@@ -70,15 +70,21 @@ class Conveyor(SFC):
     output_signal = POU.output(False)
     rope_switch_signal = POU.input(False)
     belt_break_signal = POU.input(False)
+    print(belt_break_signal)
+    print(rope_switch_signal)
+
+    speed_percent = POU.var(float)
 
     emergency_stop = POU.input(False, hidden=True)
 
     rstart = POU.var(False)
     rstop = POU.var(False)
+
+    speed_value = POU.var(float)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, 
                  output_signal=None, rope_switch_signal=None, belt_break_signal=None, 
-                 name=None, slave_addr=1, emergency_stop=None,
+                 name=None, slave_addr=1, emergency_stop=None, speed_value=200, speed_percent=3,
                  id: str = None, parent: POU = None):
         
         super().__init__(id=id, parent=parent)
@@ -93,6 +99,7 @@ class Conveyor(SFC):
         self.rope_switch_signal = rope_switch_signal
         self.belt_break_signal = belt_break_signal
         self.emergency_stop = emergency_stop
+        self.speed_percent = speed_percent
         
         self.rs = RS()
         self.ready = False
@@ -100,55 +107,55 @@ class Conveyor(SFC):
         self.last_belt_state = None
         self.belt_stuck_time = 0
         self.last_modbus_call = 0
+
+        self.speed_value = speed_value
         
     def main(self):
-        print(self.manual_signal)
-        if self.manual_signal:
-            set_condition = (self.start_signal)
+        while True:
+            if self.manual_signal:
+                set_condition = (self.start_signal)
+                    
+                reset_conditions = [not self.stop_signal]
+                reset_conditions.append(self.rope_switch_signal)
+                    
+                break_detected = self._check_belt_stuck()
+                reset_conditions.append(break_detected)
+                reset_conditions.append(self.emergency_stop)
+                    
+                reset_condition = any(reset_conditions)
+                # print("main self if konveer", self.manual_signal)
+            else:
+                set_condition = (self.rstart)
+                break_detected = self._check_belt_stuck()
+                reset_condition = (self.rstop or self.rope_switch_signal or break_detected)
+                # print("main self else konveer", self.manual_signal)
                 
-            reset_conditions = [not self.stop_signal]
-            reset_conditions.append(self.rope_switch_signal)
+            self.rs(set=set_condition, reset=reset_condition)
+            self.output_signal = self.rs.q
                 
-            break_detected = self._check_belt_stuck()
-            reset_conditions.append(break_detected)
-            reset_conditions.append(self.emergency_stop)
+            self._frequency_control()
                 
-            reset_condition = any(reset_conditions)
-            # print("main self if konveer", self.manual_signal)
-        else:
-            set_condition = (self.rstart)
-            break_detected = self._check_belt_stuck()
-            reset_condition = (self.rstop or self.rope_switch_signal or break_detected)
-            # print("main self else konveer", self.manual_signal)
-            
-        self.rs(set=set_condition, reset=reset_condition)
-        self.output_signal = self.rs.q
-            
-        self._frequency_control()
-            
-        yield
+            yield
     
     def _frequency_control(self):
+        target_speed = int(self.speed_value * self.speed_percent / 100)
         if self.rs.q:
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=2, 
-                register_value=200
+                register_value=target_speed
             )
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=1, 
                 register_value=2178  
             )
-            # print("otpravka na chastotnik pusk", self.rs.q)
-            
         else:
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=1, 
                 register_value=2177 
             )
-            # print("otpravka na chastotnik stop", self.rs.q)
         
     def _check_belt_stuck(self):
         if self.belt_break_signal is None:
@@ -173,7 +180,7 @@ class Conveyor(SFC):
         else:
             self.belt_stuck_time += 100
         
-        result = (self.belt_stuck_time >= 15000) and self.rs.q
+        result = (self.belt_stuck_time >= 5000) and self.rs.q
         return result
 
 class Feeder(SFC):
@@ -190,14 +197,15 @@ class Feeder(SFC):
 
     emergency_stop = POU.var(False)
 
-    speed_value = POU.var(1)
+    speed_value = POU.var(float)
+    speed_percent = POU.var(float)
 
     rstart = POU.var(False)
     rstop = POU.var(False)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, panel_start=None, panel_stop=None,
                  output_signal=None, rope_switch_signal=None, belt_break_signal=None, 
-                 name=None, slave_addr=1, emergency_stop=None, speed_value=1,
+                 name=None, slave_addr=1, emergency_stop=None, speed_value=0.0, speed_percent=100.0,
                  id: str = None, parent: POU = None):
         
         super().__init__(id=id, parent=parent)
@@ -216,7 +224,8 @@ class Feeder(SFC):
         self.rope_switch_signal = rope_switch_signal
         self.belt_break_signal = belt_break_signal
         self.emergency_stop = emergency_stop
-        self.speed_value = int(speed_value) * 10
+        self.speed_value = speed_value
+        self.speed_percent = speed_percent
         
         self.rs = RS()
 
@@ -252,11 +261,12 @@ class Feeder(SFC):
         yield
     
     def _frequency_control(self):
+        target_speed = int(self.speed_value * self.speed_percent / 100)
         if self.rs.q:
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=2, 
-                register_value=200
+                register_value=target_speed
             )
             host.write_single_register(
                 slave_addr=self.slave_addr, 
@@ -293,7 +303,7 @@ class Feeder(SFC):
         else:
             self.belt_stuck_time += 100
         
-        result = (self.belt_stuck_time >= 7000) and self.rs.q
+        result = (self.belt_stuck_time >= 5000) and self.rs.q
         return result
 
 
@@ -307,9 +317,13 @@ class Auger(SFC):
 
     rstart = POU.var(False)
     rstop = POU.var(False)
+
+    speed_value = POU.var(float)
+    speed_percent = POU.var(float)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, 
                  output_signal=None, name=None, slave_addr=1, emergency_stop=None,
+                 speed_value=0.0, speed_percent=100.0,
                  id: str = None, parent: POU = None):
         
         super().__init__(id=id, parent=parent)
@@ -322,10 +336,11 @@ class Auger(SFC):
         self.stop_signal = stop_signal
         self.output_signal = output_signal
         self.emergency_stop = emergency_stop
+
+        self.speed_value = speed_value
+        self.speed_percent = speed_percent
         
         self.rs = RS()
-        self.ready = False
-        self.running = False
 
         
     def main(self):
@@ -344,19 +359,19 @@ class Auger(SFC):
         yield
     
     def _frequency_control(self):
+        target_speed = int(self.speed_value * self.speed_percent / 100)
         if self.rs.q:
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=2, 
-                register_value=200
+                register_value=target_speed
             )
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=1, 
-                register_value=2178
+                register_value=2178  
             )
         else:
-            # Выключение
             host.write_single_register(
                 slave_addr=self.slave_addr, 
                 register_address=1, 
@@ -423,7 +438,7 @@ feeder_m1 = Feeder(
     panel_stop=plc.DI_PANEL1_STOP,      
     name="Питатель M1",
     slave_addr=1,
-    speed_value=100
+    speed_value=1500
 )
 
 # экземпляры механизмов 
@@ -484,10 +499,9 @@ conv_m3 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6508000_BELTBREAK_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер на дробилку M4',
-    slave_addr=2
+    slave_addr=2,
+    speed_value=1500
 )
-
-print(f"MANUAL M3 {plc.DI_STATION3_MANUAL}")
 
 conv_m5 = Conveyor(
     start_signal=plc.DI_STATION5_START,
@@ -498,7 +512,8 @@ conv_m5 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6506000_BELTBREAK_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер на грохот M6',
-    slave_addr=9
+    slave_addr=9,
+    speed_value=1500
 )
 
 conv_m7 = Conveyor(
@@ -510,7 +525,8 @@ conv_m7 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6506000_BELTBREAK2_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер на бункер накопительный',
-    slave_addr=10
+    slave_addr=10,
+    speed_value=1500
 )
 
 conv_m8 = Conveyor(
@@ -522,7 +538,8 @@ conv_m8 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6506000_BELTBREAK3_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер на станцию фасовки',
-    slave_addr=11
+    slave_addr=11,
+    speed_value=1500
 )
 
 conv_m10 = Conveyor(
@@ -534,7 +551,8 @@ conv_m10 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR65010000_BELTBREAK_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер в сушильный барабан',
-    slave_addr=3
+    slave_addr=3,
+    speed_value=1500
 )
 
 conv_m14 = Conveyor(
@@ -546,7 +564,8 @@ conv_m14 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6508000_BELTBREAK2_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M14 после сушильного барабана",
-    slave_addr=5
+    slave_addr=5,
+    speed_value=1500
 )
 
 conv_m16 = Conveyor(
@@ -558,7 +577,8 @@ conv_m16 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6508000_BELTBREAK3_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M16 на грохот 2",
-    slave_addr=6
+    slave_addr=6,
+    speed_value=1500
 )
 
 conv_m18 = Conveyor(
@@ -570,7 +590,8 @@ conv_m18 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6506000_BELTBREAK4_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M18 на бункер 3-8мм",
-    slave_addr=12
+    slave_addr=12,
+    speed_value=1500
 )
 
 conv_m19 = Conveyor(
@@ -582,7 +603,8 @@ conv_m19 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR6506000_BELTBREAK5_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M19 на бункер 0-2мм",
-    slave_addr=13
+    slave_addr=13,
+    speed_value=1500
 )
 
 conv_m20 = Conveyor(
@@ -594,7 +616,8 @@ conv_m20 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR65010000_BELTBREAK2_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M20 на станцию фасовки",
-    slave_addr=7
+    slave_addr=7,
+    speed_value=1500
 )
 
 # шнеки
@@ -625,7 +648,8 @@ fan_m12 = Auger(
     output_signal=plc.DO_FAN_TURNON,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Вентилятор дымососа",
-    slave_addr=4
+    slave_addr=4,
+    speed_value=1500
 )
 
 # барабан сушильный
