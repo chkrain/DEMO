@@ -70,8 +70,7 @@ class Conveyor(SFC):
     output_signal = POU.output(False)
     rope_switch_signal = POU.input(False)
     belt_break_signal = POU.input(False)
-    print(belt_break_signal)
-    print(rope_switch_signal)
+    belt_break_true = POU.var(False)
 
     speed_percent = POU.var(float)
 
@@ -83,7 +82,7 @@ class Conveyor(SFC):
     speed_value = POU.var(float)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, 
-                 output_signal=None, rope_switch_signal=None, belt_break_signal=None, 
+                 output_signal=None, rope_switch_signal=None, belt_break_signal=None, belt_break_true = False,
                  name=None, slave_addr=1, emergency_stop=None, speed_value=200, speed_percent=3,
                  id: str = None, parent: POU = None):
         
@@ -108,7 +107,15 @@ class Conveyor(SFC):
         self.belt_stuck_time = 0
         self.last_modbus_call = 0
 
+        self.belt_break_true = belt_break_true
         self.speed_value = speed_value
+
+        self._prev_speed_percent = speed_percent
+        self._prev_speed_value = speed_value
+        self._prev_rope_switch = rope_switch_signal
+        self._prev_belt_break = belt_break_signal
+        self._prev_output_state = None
+
         
     def main(self):
         while True:
@@ -133,7 +140,19 @@ class Conveyor(SFC):
             self.rs(set=set_condition, reset=reset_condition)
             self.output_signal = self.rs.q
                 
-            self._frequency_control()
+            if (self.output_signal != self._prev_output_state or
+                self.speed_percent != self._prev_speed_percent or
+                self.speed_value != self._prev_speed_value or
+                self.rope_switch_signal != self._prev_rope_switch or
+                self.belt_break_signal != self._prev_belt_break):
+                
+                self._prev_output_state = self.output_signal
+                self._prev_speed_percent = self.speed_percent
+                self._prev_speed_value = self.speed_value
+                self._prev_rope_switch = self.rope_switch_signal
+                self._prev_belt_break = self.belt_break_signal
+                
+                self._frequency_control()
                 
             yield
     
@@ -180,8 +199,23 @@ class Conveyor(SFC):
         else:
             self.belt_stuck_time += 100
         
-        result = (self.belt_stuck_time >= 5000) and self.rs.q
+        time = 7000
+        if self.speed_percent >= 80:
+            time = 2000
+        elif 50 <= self.speed_percent < 80:
+            time = 3000
+        elif 0 <= self.speed_percent < 50:
+            time = 5000  
+        
+        result = (self.belt_stuck_time >= time) and self.rs.q
+
+        if result:
+            self.belt_break_true = True
+        print(self.belt_break_true)
+
         return result
+    
+
 
 class Feeder(SFC):
     """Класс для ленточного питателя с частотным управлением"""
@@ -200,11 +234,13 @@ class Feeder(SFC):
     speed_value = POU.var(float)
     speed_percent = POU.var(float)
 
+    belt_break_true = POU.var(False)
+
     rstart = POU.var(False)
     rstop = POU.var(False)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, panel_start=None, panel_stop=None,
-                 output_signal=None, rope_switch_signal=None, belt_break_signal=None, 
+                 output_signal=None, rope_switch_signal=None, belt_break_signal=None, belt_break_true = False,
                  name=None, slave_addr=1, emergency_stop=None, speed_value=0.0, speed_percent=100.0,
                  id: str = None, parent: POU = None):
         
@@ -226,6 +262,7 @@ class Feeder(SFC):
         self.emergency_stop = emergency_stop
         self.speed_value = speed_value
         self.speed_percent = speed_percent
+        self.belt_break_true = belt_break_true
         
         self.rs = RS()
 
@@ -233,6 +270,16 @@ class Feeder(SFC):
         self.running = False
         self.last_belt_state = None
         self.belt_stuck_time = 0
+
+        self._prev_panel_start = panel_start
+        self._prev_panel_stop = panel_stop
+        self._prev_output_state = None
+        self._prev_speed_percent = speed_percent
+        self._prev_speed_value = speed_value
+        self._prev_rope_switch = rope_switch_signal
+        self._prev_belt_break = belt_break_signal
+        self._prev_panel_start = panel_start
+        self._prev_panel_stop = panel_stop
         
     def main(self):
         if self.manual_signal:
@@ -256,7 +303,23 @@ class Feeder(SFC):
         self.rs(set=set_condition, reset=reset_condition)
         self.output_signal = self.rs.q
             
-        self._frequency_control()
+        if (self.output_signal != self._prev_output_state or
+            self.speed_percent != self._prev_speed_percent or
+            self.speed_value != self._prev_speed_value or
+            self.rope_switch_signal != self._prev_rope_switch or
+            self.belt_break_signal != self._prev_belt_break or
+            self.panel_start != self._prev_panel_start or
+            self.panel_stop != self._prev_panel_stop):
+            
+            self._prev_output_state = self.output_signal
+            self._prev_speed_percent = self.speed_percent
+            self._prev_speed_value = self.speed_value
+            self._prev_rope_switch = self.rope_switch_signal
+            self._prev_belt_break = self.belt_break_signal
+            self._prev_panel_start = self.panel_start
+            self._prev_panel_stop = self.panel_stop
+            
+            self._frequency_control()
             
         yield
     
@@ -303,9 +366,24 @@ class Feeder(SFC):
         else:
             self.belt_stuck_time += 100
         
-        result = (self.belt_stuck_time >= 5000) and self.rs.q
-        return result
+        time = 7000
+        if self.speed_percent >= 80:
+            time = 3000
+        # 15000
+        elif 50 <= self.speed_percent < 80:
+            time = 5000
+        # 25000
+        elif 0 <= self.speed_percent < 50:
+            time = 7000  
+        # 35000
+        
+        result = (self.belt_stuck_time >= time) and self.rs.q
 
+        if result:
+            self.belt_break_true = True
+        print(self.belt_break_true)
+
+        return result
 
 class Auger(SFC):
     start_signal = POU.input(False)
@@ -339,6 +417,10 @@ class Auger(SFC):
 
         self.speed_value = speed_value
         self.speed_percent = speed_percent
+
+        self._prev_output_state = None
+        self._prev_speed_percent = speed_percent
+        self._prev_speed_value = speed_value
         
         self.rs = RS()
 
@@ -354,7 +436,15 @@ class Auger(SFC):
         self.rs(set=set_condition, reset=reset_condition)
         self.output_signal = self.rs.q
             
-        self._frequency_control()
+        if (self.output_signal != self._prev_output_state or
+            self.speed_percent != self._prev_speed_percent or
+            self.speed_value != self._prev_speed_value):
+            
+            self._prev_output_state = self.output_signal
+            self._prev_speed_percent = self.speed_percent
+            self._prev_speed_value = self.speed_value
+            
+            self._frequency_control()
             
         yield
     
@@ -432,7 +522,7 @@ feeder_m1 = Feeder(
     manual_signal=plc.DI_STATION1_MANUAL,
     stop_signal=plc.DI_STATION1_STOP,
     output_signal=plc.DO_BELTFEEDER_TURNON,
-    rope_switch_signal=plc.DI_BELTFEEDER_ROPESWITCH_TRIPPED ,
+    rope_switch_signal=plc.DI_BELTFEEDER_ROPESWITCH_TRIPPED,
     belt_break_signal=plc.DI_BELTFEEDER_BELTBREAK_TRIPPED,
     panel_start=plc.DI_PANEL1_START,      
     panel_stop=plc.DI_PANEL1_STOP,      
@@ -662,8 +752,9 @@ drum_m11 = Drum(
     name="Барабан сушильный"
 )
 
+# fan_m12,
 
 plc.run(instances=[feeder_m1, izm_m2, drob_m4, groh_m6, drob_m15, groh_m17, conv_m3, 
                    conv_m5, conv_m7, conv_m8, conv_m10, conv_m14, conv_m16, conv_m18, 
-                   conv_m19, conv_m20, auger_m13, auger_m22, fan_m12, drum_m11], ctx=globals())
+                   conv_m19, conv_m20, auger_m13, auger_m22, drum_m11], ctx=globals())
 
