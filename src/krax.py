@@ -17,10 +17,14 @@ class Mechanism(SFC):
 
     emergency_stop = POU.input(False, hidden=True)
 
+    cascade_start = POU.var(False)
+    cascade_stop = POU.var(False)
+
     rstart = POU.var(False)
     rstop = POU.var(False)
     
     def __init__(self, start_signal:bool, manual_signal=None, stop_signal=None, 
+                 cascade_start=False, cascade_stop=False,
                  output_signal=None, name=None, id: str = None, parent: POU = None, emergency_stop=None):
         super().__init__(id=id, parent=parent)
         self.name = name or id or "Mechanism"
@@ -31,8 +35,13 @@ class Mechanism(SFC):
         self.stop_signal = stop_signal
         self.output_signal = output_signal
         self.emergency_stop = emergency_stop
+        self.name = name
+
+        self.cascade_start = cascade_start
+        self.cascade_stop = cascade_stop
 
         self.rs = RS( )
+        self.ton = TON(pt=3000) 
         # self.subtasks = ( self.man_ctl, )
         # self.ton = TON(pt=startup_time)
         # self.ready = False
@@ -48,18 +57,19 @@ class Mechanism(SFC):
         if not self.manual_signal:
             set_condition = self.rstart
             reset_condition = self.rstop or self.emergency_stop
-            # print("main self if vеханизм", set_condition, reset_condition)
+            if self.rstart:
+                print(f"{self.id}: Получена команда запуска от каскада")
+            if self.rstop:
+                print(f"{self.id}: Получена команда остановки от каскада")
         else:
             set_condition =  self.start_signal 
             reset_condition = not self.stop_signal
-            # print("main self else vеханизм", set_condition, reset_condition)
 
         self.rs(set=set_condition, reset=reset_condition)
         self.output_signal = self.rs.q
         
 
         yield
-
 
 class Conveyor(SFC):
     """Класс для конвейеров с частотным управлением"""
@@ -83,7 +93,7 @@ class Conveyor(SFC):
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, 
                  output_signal=None, rope_switch_signal=None, belt_break_signal=None, belt_break_true = False,
-                 name=None, slave_addr=1, emergency_stop=None, speed_value=200, speed_percent=3,
+                 name=None, slave_addr=1, emergency_stop=None, speed_value=200, speed_percent=30.0,
                  id: str = None, parent: POU = None):
         
         super().__init__(id=id, parent=parent)
@@ -115,6 +125,9 @@ class Conveyor(SFC):
         self._prev_rope_switch = rope_switch_signal
         self._prev_belt_break = belt_break_signal
         self._prev_output_state = None
+        self._prev_start_signal = start_signal
+        self._prev_stop_signal = stop_signal
+        self._prev_manual_signal = manual_signal
 
         
     def main(self):
@@ -130,12 +143,10 @@ class Conveyor(SFC):
                 reset_conditions.append(self.emergency_stop)
                     
                 reset_condition = any(reset_conditions)
-                # print("main self if konveer", self.manual_signal)
             else:
                 set_condition = (self.rstart)
                 break_detected = self._check_belt_stuck()
                 reset_condition = (self.rstop or self.rope_switch_signal or break_detected)
-                # print("main self else konveer", self.manual_signal)
                 
             self.rs(set=set_condition, reset=reset_condition)
             self.output_signal = self.rs.q
@@ -144,13 +155,19 @@ class Conveyor(SFC):
                 self.speed_percent != self._prev_speed_percent or
                 self.speed_value != self._prev_speed_value or
                 self.rope_switch_signal != self._prev_rope_switch or
-                self.belt_break_signal != self._prev_belt_break):
+                self.belt_break_signal != self._prev_belt_break or
+                self.start_signal != self._prev_start_signal or
+                self.stop_signal != self._prev_stop_signal or 
+                self.manual_signal != self._prev_manual_signal):
                 
                 self._prev_output_state = self.output_signal
                 self._prev_speed_percent = self.speed_percent
                 self._prev_speed_value = self.speed_value
                 self._prev_rope_switch = self.rope_switch_signal
                 self._prev_belt_break = self.belt_break_signal
+                self._prev_stop_signal = self.stop_signal
+                self._prev_start_signal = self.start_signal
+                self._prev_manual_signal = self.manual_signal
                 
                 self._frequency_control()
                 
@@ -158,23 +175,26 @@ class Conveyor(SFC):
     
     def _frequency_control(self):
         target_speed = int(self.speed_value * self.speed_percent / 100)
-        if self.rs.q:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=2, 
-                register_value=target_speed
-            )
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2178  
-            )
-        else:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2177 
-            )
+        try:
+            if self.rs.q:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=2, 
+                    register_value=target_speed
+                )
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2178  
+                )
+            else:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2177 
+                )
+        except:
+            pass
         
     def _check_belt_stuck(self):
         if self.belt_break_signal is None:
@@ -201,17 +221,179 @@ class Conveyor(SFC):
         
         time = 7000
         if self.speed_percent >= 80:
-            time = 2000
+            time = 15000
         elif 50 <= self.speed_percent < 80:
-            time = 3000
+            time = 25000
         elif 0 <= self.speed_percent < 50:
-            time = 5000  
+            time = 35000  
         
         result = (self.belt_stuck_time >= time) and self.rs.q
 
         if result:
             self.belt_break_true = True
-        print(self.belt_break_true)
+
+        return result
+    
+
+class ConveyorPackaging(SFC):
+    """Класс для конвейеров с частотным управлением"""
+    
+    start_signal = POU.input(False)
+    manual_signal = POU.input(None)
+    stop_signal = POU.input(False)
+    output_signal = POU.output(False)
+    rope_switch_signal = POU.input(False)
+    belt_break_signal = POU.input(False)
+    belt_break_true = POU.var(False)
+    speed_percent = POU.var(float)
+    emergency_stop = POU.input(False, hidden=True)
+    rstart = POU.var(False)
+    rstop = POU.var(False)
+    speed_value = POU.var(float)
+    gate = POU.input(True)
+    
+    def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, 
+                 output_signal=None, rope_switch_signal=None, belt_break_signal=None, belt_break_true = False,
+                 name=None, slave_addr=1, emergency_stop=None, speed_value=200, speed_percent=30.0, gate=True,
+                 id: str = None, parent: POU = None):
+        
+        super().__init__(id=id, parent=parent)
+        
+        self.name = name or id or "Conveyor"
+        self.slave_addr = slave_addr
+        
+        self.start_signal = start_signal
+        self.manual_signal = manual_signal
+        self.stop_signal = stop_signal
+        self.output_signal = output_signal
+        self.rope_switch_signal = rope_switch_signal
+        self.belt_break_signal = belt_break_signal
+        self.emergency_stop = emergency_stop
+        self.speed_percent = speed_percent
+        
+        self.rs = RS()
+        self.ready = False
+        self.running = False
+        self.last_belt_state = None
+        self.belt_stuck_time = 0
+        self.last_modbus_call = 0
+
+        self.belt_break_true = belt_break_true
+        self.speed_value = speed_value
+
+        self._prev_speed_percent = speed_percent
+        self._prev_speed_value = speed_value
+        self._prev_rope_switch = rope_switch_signal
+        self._prev_belt_break = belt_break_signal
+        self._prev_output_state = None
+        self._prev_manual_signal = self.manual_signal
+        self._prev_start_signal = self.start_signal
+        self._prev_stop_signal = self.stop_signal
+
+        self.gate = gate
+
+        
+    def main(self):
+        while True:
+            if self.manual_signal:
+                set_condition = (self.start_signal and not self.gate)
+                    
+                reset_conditions = [not self.stop_signal, self.gate]
+                reset_conditions.append(self.rope_switch_signal)
+                    
+                break_detected = self._check_belt_stuck()
+                reset_conditions.append(break_detected)
+                reset_conditions.append(self.emergency_stop)
+                    
+                reset_condition = any(reset_conditions)
+            else:
+                set_condition = (self.rstart or not self.gate)
+                break_detected = self._check_belt_stuck()
+                reset_condition = (self.rstop or self.rope_switch_signal or break_detected or self.gate)
+                
+            self.rs(set=set_condition, reset=reset_condition)
+            self.output_signal = self.rs.q
+                
+            if (self.output_signal != self._prev_output_state or
+                self.speed_percent != self._prev_speed_percent or
+                self.speed_value != self._prev_speed_value or
+                self.rope_switch_signal != self._prev_rope_switch or
+                self.belt_break_signal != self._prev_belt_break or
+                self.start_signal != self._prev_start_signal or
+                self.stop_signal != self._prev_stop_signal or 
+                self.manual_signal != self._prev_manual_signal):
+                
+                self._prev_output_state = self.output_signal
+                self._prev_speed_percent = self.speed_percent
+                self._prev_speed_value = self.speed_value
+                self._prev_rope_switch = self.rope_switch_signal
+                self._prev_belt_break = self.belt_break_signal
+                self._prev_stop_signal = self.stop_signal
+                self._prev_start_signal = self.start_signal
+                self._prev_manual_signal = self.manual_signal
+                
+                self._frequency_control()
+                
+            yield
+    
+    def _frequency_control(self):
+        target_speed = int(self.speed_value * self.speed_percent / 100)
+        try:
+            if self.rs.q:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=2, 
+                    register_value=target_speed
+                )
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2178  
+                )
+            else:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2177 
+                )
+        except:
+            pass
+        
+    def _check_belt_stuck(self):
+        if self.belt_break_signal is None:
+            return False
+            
+        current_state = self.belt_break_signal
+        
+        if not self.rs.q:
+            self.belt_stuck_time = 0
+            self.last_belt_state = None
+            return False
+        
+        if self.last_belt_state is None:
+            self.last_belt_state = current_state
+            self.belt_stuck_time = 0
+            return False
+        
+        if current_state != self.last_belt_state:
+            self.last_belt_state = current_state
+            self.belt_stuck_time = 0
+            return False
+        else:
+            self.belt_stuck_time += 100
+        
+        time = 7000
+        if self.speed_percent >= 80:
+            time = 15000
+        elif 50 <= self.speed_percent < 80:
+            time = 25000
+        elif 0 <= self.speed_percent < 50:
+            time = 35000  
+        
+        result = (self.belt_stuck_time >= time) and self.rs.q
+
+        if result:
+            self.belt_break_true = True
 
         return result
     
@@ -228,20 +410,17 @@ class Feeder(SFC):
     output_signal = POU.output(False)
     rope_switch_signal = POU.input(False)
     belt_break_signal = POU.input(False)
-
     emergency_stop = POU.var(False)
-
     speed_value = POU.var(float)
     speed_percent = POU.var(float)
-
     belt_break_true = POU.var(False)
-
     rstart = POU.var(False)
     rstop = POU.var(False)
+    holding_register = POU.var(any)
     
     def __init__(self, start_signal=None, manual_signal=None, stop_signal=None, panel_start=None, panel_stop=None,
                  output_signal=None, rope_switch_signal=None, belt_break_signal=None, belt_break_true = False,
-                 name=None, slave_addr=1, emergency_stop=None, speed_value=0.0, speed_percent=100.0,
+                 name=None, slave_addr=1, emergency_stop=None, speed_value=0.0, speed_percent=30.0, holding_register=any,
                  id: str = None, parent: POU = None):
         
         super().__init__(id=id, parent=parent)
@@ -263,14 +442,11 @@ class Feeder(SFC):
         self.speed_value = speed_value
         self.speed_percent = speed_percent
         self.belt_break_true = belt_break_true
-        
         self.rs = RS()
-
         self.ready = False
         self.running = False
         self.last_belt_state = None
         self.belt_stuck_time = 0
-
         self._prev_panel_start = panel_start
         self._prev_panel_stop = panel_stop
         self._prev_output_state = None
@@ -280,6 +456,11 @@ class Feeder(SFC):
         self._prev_belt_break = belt_break_signal
         self._prev_panel_start = panel_start
         self._prev_panel_stop = panel_stop
+        self._prev_manual_signal = self.manual_signal
+        self._prev_start_signal = self.start_signal
+        self._prev_stop_signal = self.stop_signal
+
+        self.holding_register = holding_register
         
     def main(self):
         if self.manual_signal:
@@ -309,7 +490,10 @@ class Feeder(SFC):
             self.rope_switch_signal != self._prev_rope_switch or
             self.belt_break_signal != self._prev_belt_break or
             self.panel_start != self._prev_panel_start or
-            self.panel_stop != self._prev_panel_stop):
+            self.panel_stop != self._prev_panel_stop or           
+            self.start_signal != self._prev_start_signal or
+            self.stop_signal != self._prev_stop_signal or 
+            self.manual_signal != self._prev_manual_signal):
             
             self._prev_output_state = self.output_signal
             self._prev_speed_percent = self.speed_percent
@@ -318,6 +502,9 @@ class Feeder(SFC):
             self._prev_belt_break = self.belt_break_signal
             self._prev_panel_start = self.panel_start
             self._prev_panel_stop = self.panel_stop
+            self._prev_stop_signal = self.stop_signal
+            self._prev_start_signal = self.start_signal
+            self._prev_manual_signal = self.manual_signal
             
             self._frequency_control()
             
@@ -325,23 +512,26 @@ class Feeder(SFC):
     
     def _frequency_control(self):
         target_speed = int(self.speed_value * self.speed_percent / 100)
-        if self.rs.q:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=2, 
-                register_value=target_speed
-            )
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2178  
-            )
-        else:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2177 
-            )
+        try:
+            if self.rs.q:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=2, 
+                    register_value=target_speed
+                )
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2178  
+                )
+            else:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2177 
+                )
+        except:
+            pass
         
     def _check_belt_stuck(self):
         if self.belt_break_signal is None:
@@ -368,20 +558,16 @@ class Feeder(SFC):
         
         time = 7000
         if self.speed_percent >= 80:
-            time = 3000
-        # 15000
+            time = 15000
         elif 50 <= self.speed_percent < 80:
-            time = 5000
-        # 25000
+            time = 25000
         elif 0 <= self.speed_percent < 50:
-            time = 7000  
-        # 35000
+            time = 35000  
         
         result = (self.belt_stuck_time >= time) and self.rs.q
 
         if result:
             self.belt_break_true = True
-        print(self.belt_break_true)
 
         return result
 
@@ -421,6 +607,9 @@ class Auger(SFC):
         self._prev_output_state = None
         self._prev_speed_percent = speed_percent
         self._prev_speed_value = speed_value
+        self._prev_start_signal = start_signal
+        self._prev_stop_signal = stop_signal
+        self._prev_manual_signal = manual_signal
         
         self.rs = RS()
 
@@ -438,11 +627,17 @@ class Auger(SFC):
             
         if (self.output_signal != self._prev_output_state or
             self.speed_percent != self._prev_speed_percent or
-            self.speed_value != self._prev_speed_value):
+            self.speed_value != self._prev_speed_value or        
+            self.start_signal != self._prev_start_signal or
+            self.stop_signal != self._prev_stop_signal or 
+            self.manual_signal != self._prev_manual_signal):
             
             self._prev_output_state = self.output_signal
             self._prev_speed_percent = self.speed_percent
             self._prev_speed_value = self.speed_value
+            self._prev_stop_signal = self.stop_signal
+            self._prev_start_signal = self.start_signal
+            self._prev_manual_signal = self.manual_signal
             
             self._frequency_control()
             
@@ -450,23 +645,26 @@ class Auger(SFC):
     
     def _frequency_control(self):
         target_speed = int(self.speed_value * self.speed_percent / 100)
-        if self.rs.q:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=2, 
-                register_value=target_speed
-            )
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2178  
-            )
-        else:
-            host.write_single_register(
-                slave_addr=self.slave_addr, 
-                register_address=1, 
-                register_value=2177 
-            )
+        try:
+            if self.rs.q:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=2, 
+                    register_value=target_speed
+                )
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2178  
+                )
+            else:
+                host.write_single_register(
+                    slave_addr=self.slave_addr, 
+                    register_address=1, 
+                    register_value=2177 
+                )
+        except:
+            pass
 
 class Drum(SFC):
     start_signal = POU.input(False)
@@ -525,7 +723,8 @@ feeder_m1 = Feeder(
     rope_switch_signal=plc.DI_BELTFEEDER_ROPESWITCH_TRIPPED,
     belt_break_signal=plc.DI_BELTFEEDER_BELTBREAK_TRIPPED,
     panel_start=plc.DI_PANEL1_START,      
-    panel_stop=plc.DI_PANEL1_STOP,      
+    panel_stop=plc.DI_PANEL1_STOP,     
+    emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Питатель M1",
     slave_addr=1,
     speed_value=1500
@@ -619,7 +818,7 @@ conv_m7 = Conveyor(
     speed_value=1500
 )
 
-conv_m8 = Conveyor(
+conv_m8 = ConveyorPackaging(
     start_signal=plc.DI_STATION8_START,
     manual_signal=plc.DI_STATION8_MANUAL,
     stop_signal=plc.DI_STATION8_STOP,
@@ -629,6 +828,7 @@ conv_m8 = Conveyor(
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name='Конвейер на станцию фасовки',
     slave_addr=11,
+    gate=plc.DI_PACKINGHOPPERGATE_OPEN,
     speed_value=1500
 )
 
@@ -697,7 +897,7 @@ conv_m19 = Conveyor(
     speed_value=1500
 )
 
-conv_m20 = Conveyor(
+conv_m20 = ConveyorPackaging(
     start_signal=plc.DI_STATION18_START,
     manual_signal=plc.DI_STATION18_MANUAL,
     stop_signal=plc.DI_STATION18_STOP,
@@ -706,6 +906,7 @@ conv_m20 = Conveyor(
     belt_break_signal=plc.DI_CONVEYOR65010000_BELTBREAK2_TRIPPED,
     emergency_stop=plc.DI_EMERGENCY_STOP,
     name="Конвейер M20 на станцию фасовки",
+    gate=plc.DI_PACKINGHOPPERGATE2_OPEN,
     slave_addr=7,
     speed_value=1500
 )
@@ -752,9 +953,212 @@ drum_m11 = Drum(
     name="Барабан сушильный"
 )
 
+
+class CascadeController(SFC):
+    """Контроллер каскадного управления"""
+    
+    IDLE = 0
+    STARTING = 1
+    STOPPING = 2
+    
+    on = POU.var(False)
+    off = POU.var(False)
+    msg = POU.var('ГОТОВ')
+
+    def __init__(self, equipment_list: list, id: str = None, parent: POU = None):
+        super().__init__(id=id, parent=parent)
+        self.equipment_list = equipment_list
+        self._t_on = FTRIG(clk=lambda: self.on)
+        self._t_off = RTRIG(clk=lambda: self.off)
+        self.subtasks = (self._t_on, self._t_off)
+        self.state = CascadeController.IDLE
+
+    def _start(self):
+        """Последовательный запуск оборудования"""
+        self.state = CascadeController.STARTING
+        self.msg = 'ЗАПУСК КАСКАДА'
+        print('=== НАЧАЛО ЗАПУСКА КАСКАДА ===')
+        
+        for i, equipment in enumerate(self.equipment_list):
+            print(f'ШАГ {i+1}/{len(self.equipment_list)}: Запуск {equipment.id}')
+            
+            if hasattr(equipment, 'output_signal') and equipment.output_signal:
+                print(f'  {equipment.id} уже запущен, пропускаем')
+                continue
+            
+            print(f'  Подаем команду запуска на {equipment.id}')
+            if hasattr(equipment, 'rstart'):
+                equipment.rstart = True
+                yield
+                equipment.rstart = False
+            
+            # Ждем запуска оборудования
+            print(f'  Ожидаем запуска {equipment.id}')
+            timeout = TON(pt=5000)  # 5 секунд на запуск каждого оборудования
+            start_time = 0
+            while start_time < 5000:
+                timeout(True)
+                if timeout.q:
+                    print(f'  ТАЙМАУТ: {equipment.id} не запустился за 5 секунд')
+                    break
+                if hasattr(equipment, 'output_signal') and equipment.output_signal:
+                    print(f'  {equipment.id} успешно запущен')
+                    break
+                yield from self.pause(100)
+                start_time += 100
+            
+            if not (hasattr(equipment, 'output_signal') and equipment.output_signal):
+                print(f'  ОШИБКА: Не удалось запустить {equipment.id}')
+                self.msg = f'ОШИБКА ЗАПУСКА {equipment.id}'
+                self.state = CascadeController.IDLE
+                return
+            
+            if self.state != CascadeController.STARTING:
+                print('  Запуск прерван')
+                break
+            
+            if i < len(self.equipment_list) - 1:
+                print(f'  Пауза 5 секунды перед следующим оборудованием')
+                yield from self.pause(5000)
+        
+        if self.state == CascadeController.STARTING:
+            self.state = CascadeController.IDLE
+            self.msg = 'КАСКАД ЗАПУЩЕН'
+            print('=== КАСКАД УСПЕШНО ЗАПУЩЕН ===')
+
+    def _stop(self):
+        """Последовательная остановка оборудования"""
+        self.state = CascadeController.STOPPING
+        self.msg = 'ОСТАНОВ КАСКАДА'
+        print('=== НАЧАЛО ОСТАНОВА КАСКАДА ===')
+        
+        for i, equipment in enumerate(reversed(self.equipment_list)):
+            eq_index = len(self.equipment_list) - i - 1
+            print(f'ШАГ {i+1}/{len(self.equipment_list)}: Остановка {equipment.id}')
+            
+            if not (hasattr(equipment, 'output_signal') and equipment.output_signal):
+                print(f'  {equipment.id} уже остановлен, пропускаем')
+                continue
+            
+            print(f'  Подаем команду остановки на {equipment.id}')
+            if hasattr(equipment, 'rstop'):
+                equipment.rstop = True
+                yield
+                equipment.rstop = False
+            
+            # Ждем остановки оборудования
+            print(f'  Ожидаем остановки {equipment.id}')
+            timeout = TON(pt=5000)  # 5 секунд на остановку каждого оборудования
+            stop_time = 0
+            while stop_time < 5000:
+                timeout(True)
+                if timeout.q:
+                    print(f'  ТАЙМАУТ: {equipment.id} не остановился за 5 секунд')
+                    break
+                if not (hasattr(equipment, 'output_signal') and equipment.output_signal):
+                    print(f'  {equipment.id} успешно остановлен')
+                    break
+                yield from self.pause(100)
+                stop_time += 100
+            
+            if hasattr(equipment, 'output_signal') and equipment.output_signal:
+                print(f'  ОШИБКА: Не удалось остановить {equipment.id}')
+                self.msg = f'ОШИБКА ОСТАНОВА {equipment.id}'
+                self.state = CascadeController.IDLE
+                return
+            
+            if self.state != CascadeController.STOPPING:
+                print('  Останов прерван')
+                break
+            
+            if i < len(self.equipment_list) - 1:
+                print(f'  Пауза 5 секунды перед следующим оборудованием')
+                yield from self.pause(5000)
+        
+        if self.state == CascadeController.STOPPING:
+            self.state = CascadeController.IDLE
+            self.msg = 'КАСКАД ОСТАНОВЛЕН'
+            print('=== КАСКАД УСПЕШНО ОСТАНОВЛЕН ===')
+
+    def main(self):
+        print('Каскадный контроллер запущен. Ожидание команд...')
+        
+        while True:
+            yield from self.until(lambda: self._t_on.q or self._t_off.q, step='ожидаем пуск/стоп')
+            
+            if self._t_on.q and self.state == CascadeController.IDLE:
+                print('Получена команда ЗАПУСКА каскада')
+                yield from self._start()
+            
+            if self._t_off.q and self.state == CascadeController.IDLE:
+                print('Получена команда ОСТАНОВА каскада')
+                yield from self._stop()
+            
+            yield
+
+# Определяем порядок оборудования в каскаде
+cascade_equipment = [
+    feeder_m1,    
+    izm_m2,       
+    conv_m3,      
+    drob_m4,     
+    conv_m5,      
+    groh_m6,      
+    conv_m7,      
+    conv_m10,  
+    drum_m11,   
+    auger_m13,    
+    conv_m14,    
+    drob_m15,    
+    conv_m16,  
+    groh_m17,    
+    conv_m18,    
+    conv_m19     
+]
+
+cascade_controller = CascadeController(
+    equipment_list=cascade_equipment,
+    id="Каскадный контроллер"
+)
+
+
+class EmergencyStop(SFC):
+    """Экстренная остановка всего оборудования кроме вентилятора М12"""
+    
+    emergency_button = POU.input(False)
+    
+    def __init__(self, id: str = None, parent: POU = None):
+        super().__init__(id=id, parent=parent)
+        self.equipment = [] 
+    
+    def main(self):
+        while True:
+            if self.emergency_button:
+                for equipment in self.equipment:
+                    if hasattr(equipment, 'rstop'):
+                        equipment.rstop = True
+                
+                yield
+                
+                for equipment in self.equipment:
+                    if hasattr(equipment, 'rstop'):
+                        equipment.rstop = False
+                
+                while self.emergency_button:
+                    yield
+            
+            yield
+
+emergency_stop = EmergencyStop()
+emergency_stop.emergency_button = plc.DI_EMERGENCY_STOP
+
+emergency_stop.equipment = [feeder_m1, izm_m2, drob_m4, groh_m6, drob_m15, groh_m17, conv_m3, 
+                            conv_m5, conv_m7, conv_m8, conv_m10, conv_m14, conv_m16, conv_m18, 
+                            conv_m19, conv_m20, auger_m13, drum_m11]
+
 # fan_m12,
 
 plc.run(instances=[feeder_m1, izm_m2, drob_m4, groh_m6, drob_m15, groh_m17, conv_m3, 
                    conv_m5, conv_m7, conv_m8, conv_m10, conv_m14, conv_m16, conv_m18, 
-                   conv_m19, conv_m20, auger_m13, auger_m22, drum_m11], ctx=globals())
+                   conv_m19, conv_m20, auger_m13, auger_m22, drum_m11, cascade_controller, emergency_stop], ctx=globals())
 
