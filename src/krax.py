@@ -948,6 +948,15 @@ drum_m11 = Drum(
     name="Барабан сушильный"
 )
 
+compressor = Mechanism(
+    start_signal=plc.DI_STATION_COMPRESSOR_START,
+    manual_signal=plc.DI_STATION_COMPRESSOR_MANUAL,
+    stop_signal=plc.DI_STATION_COMPRESSOR_STOP,
+    output_signal=plc.DO_COMPRESSOR_TURNON,
+    emergency_stop=plc.DI_EMERGENCY_STOP,
+    name="Компрессор"
+)
+
 
 class CascadeController(SFC):
     """Контроллер каскадного управления"""
@@ -1142,7 +1151,7 @@ class Emergency(SFC):
 all_equipment = [
     feeder_m1, izm_m2, conv_m3, drob_m4, conv_m5, groh_m6, conv_m7, 
     conv_m8, conv_m10, auger_m13, conv_m14, drob_m15, conv_m16, 
-    groh_m17, conv_m18, conv_m19, conv_m20, drum_m11
+    groh_m17, conv_m18, conv_m19, conv_m20, drum_m11, compressor
 ]
 
 
@@ -1152,5 +1161,5 @@ emerg = Emergency(
 
 plc.run(instances=[feeder_m1, izm_m2, drob_m4, groh_m6, drob_m15, groh_m17, conv_m3, 
                    conv_m5, conv_m7, conv_m8, conv_m10, conv_m14, conv_m16, conv_m18, 
-                   conv_m19, conv_m20, auger_m13, auger_m22, drum_m11, cascade_controller, fan_m12, emerg], ctx=globals())
+                   conv_m19, conv_m20, auger_m13, auger_m22, drum_m11, cascade_controller, fan_m12, emerg, compressor], ctx=globals())
 
