@@ -206,19 +206,20 @@ class EquipmentDrum(Equipment):
 class EquipmentPack(EquipmentROT):
     gate = POU.input(False)
     
-    def __init__(self, gate=None, **kwargs):
+    def __init__(self, gate=False, **kwargs):
         super().__init__(**kwargs)
-        self.gate = gate
+        print(f'EquipmentPack {self.id}: gate bound to {gate}')
+
     
     def set_start(self):
         base_start = super().set_start()
         
         if self.manual:
             result = self.gate and base_start
-            print(f'Ручной: gate={self.gate}, base={base_start} -> {result}')
+            print(f'Ручной: {self.id} gate={self.gate}, base={base_start} -> {result}') 
         else:
             result = self.gate or base_start
-            print(f'Авто: gate={self.gate}, base={base_start} -> {result}')
+            print(f'Авто: {self.id} gate={self.gate}, base={base_start} -> {result}') 
         
         return result
     
@@ -227,6 +228,8 @@ class EquipmentPack(EquipmentROT):
         return not self.gate or base_stop
     
     def _allowed(self):
+        print(f'{self.id}: gate value = {self.gate}, lock = {self.lock}')
+        
         self.allowed = True
         
         if self.depends is not None and not self.manual:
@@ -238,6 +241,7 @@ class EquipmentPack(EquipmentROT):
         
         self.allowed = not self.lock
         
+        print(f'{self.id}: final allowed = {self.allowed}')
         return self.allowed
 
     
@@ -300,14 +304,13 @@ class EquipmentChain(SFC):
         self.state = EquipmentChain.IDLE
 
     def _countdown(self, gear, action, total_time, condition):
-        """Универсальная функция обратного отсчета"""
         remaining = total_time
         if not condition: return
         while remaining >= 0:
             self.msg = f'{action} {gear.id}: {remaining} сек' # </bold>
             yield from self.pause(1000)
             remaining -= 1
-        self.msg = f'Оборудование {gear.id} отработано, переход к следующему..'
+        self.msg = f'Оборудование {gear.id} готово, переход к следующему..'
         return remaining == 0
 
     def _start(self):

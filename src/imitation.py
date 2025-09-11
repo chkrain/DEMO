@@ -1,6 +1,7 @@
 from pyplc.sfc import SFC,POU
 from pyplc.utils.misc import BLINK,TON
 from typing import Any
+import time
 
 class IValveOrCylinder(SFC):
     open = POU.input(False,hidden=True)
@@ -77,8 +78,18 @@ class IGate(POU):
         super().__init__(id, parent)
         self.equipment = equipment
         self.simulate = simulate
+        self.counter = 0
+        self._gate_state = False
         
     def __call__(self):
         with self:
-            if self.simulate:
-                self.equipment.gate = True
+            self.counter += 1
+            if self.counter % 100 == 0:  
+                self._gate_state = not self._gate_state
+                if hasattr(self.equipment.gate, 'force'):
+                    self.equipment.gate.force(self._gate_state)
+                else:
+                    self.equipment.gate = self._gate_state
+                print(f'Gate changed to: {self._gate_state}')
+                print(f'Equipment gate actual value: {self.equipment.gate}')
+                

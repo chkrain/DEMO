@@ -57,11 +57,11 @@ m20 = EquipmentPack(q = plc.M20_ISON, rot = plc.M20_BELT, fault = plc.M20_ROPE, 
                         stop = plc.M20_STOP, manual = plc.M20_MAN, depends = m19, lock = plc.M20_ROPE, gate=plc.PACK2)
 
 compressor = EquipmentAutoStart(q = plc.COMPRES_ISON, depends=None, start = plc.COMPRES_START, 
-                                stop = plc.COMPRES_STOP, manual = plc.COMPRES_MAN, auto_start_on=(m8, m20))
+                                stop = plc.COMPRES_STOP, manual = plc.COMPRES_MAN, auto_start_on=(m7, m8, m18, m20))
 
 cascade = EquipmentChain( gears=(m1, m2, m3, m4, m5, m6, m7, m10, m11, m14, m15, m16, m17, m18, m19))
 
-instances =  (m1, m2, m3, m4, m5, m6, m7, m8, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, cascade, compressor, ) # 
+instances =  (m1, m2, m3, m4, m5, m6, m7, m8, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, cascade, compressor, ) 
 
 if platform == 'linux':
     from imitation import IRotation, IGate
