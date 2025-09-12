@@ -2,14 +2,92 @@ from pyplc.sfc import SFC, POU
 from pyplc.utils.latch import RS
 from pyplc.utils.trig import TRIG, FTRIG, RTRIG
 from pyplc.utils.misc import TOF
+from _thread import start_new_thread,allocate_lock
+from umodbus.tcp import TCP as ModbusTCPMaster
+import time
+
+class ModbusClient:
+    _instance   = None
+    _lock       = allocate_lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance           = super().__new__(cls)
+            cls._instance.host      = None
+            cls._instance.queue     = []
+            cls._instance.running   = True
+            cls._instance.connected = False
+            start_new_thread(cls._instance._worker, ())
+        return cls._instance
+    
+    def _connect(self):
+        if self.connected and self.host:
+            return True
+            
+        try:
+            self.host       = ModbusTCPMaster(slave_ip='192.168.8.10', slave_port=502, timeout=3)
+            self.connected  = True
+            print("Модбас подключен")
+            return True
+        except Exception as e:
+            print(f"Ошибка модбас: {e}")
+            self.host       = None
+            self.connected  = False
+            return False
+    
+    def write_register(self, slave_addr, register_address, register_value):
+        with self._lock:
+            self.queue.append(('write', slave_addr, register_address, register_value))
+    
+    def _worker(self):
+        while self.running:
+            try:
+                if not self.connected:
+                    self._connect()
+                    time.sleep(2)
+                    continue
+                
+                if self.queue and self.connected:
+                    with self._lock:
+                        task = self.queue.pop(0)
+                    
+                    if task[0] == 'write' and self.host:
+                        try:
+                            result = self.host.write_single_register(slave_addr=task[1], register_address=task[2], register_value=task[3])
+                            print(f'Modbus write: slave={task[1]}, reg={task[2]}, value={task[3]}, result={result}')
+                        except Exception as e:
+                            print(f'Ошибка записи: {e}')
+                            self.connected  = False
+                            self.host       = None
+                            with self._lock:
+                                self.queue.insert(0, task)
+                
+                time.sleep(0.1)  
+                
+            except Exception as e:
+                print(f"Ошибка в работе: {e}")
+                self.connected  = False
+                self.host       = None
+                time.sleep(1)
+    
+    def stop(self):
+        self.running = False
+
+
+try:
+    modbus_client = ModbusClient()
+    print("Модбас клиент создан")
+except Exception as e:
+    print(f"Не получилось создать модбас клиент: {e}")
+    modbus_client = None
+
 
 class Equipment(SFC):
     """ Базовый класс для работы с оборудованием: конвейера, механизмы"""
-    IDLE    = 0
-    STARTUP = 1
-    RUN     = 2
-    STOP    = 3
-
+    IDLE        = 0
+    STARTUP     = 1
+    RUN         = 2
+    STOP        = 3
     ready       = POU.var(False)
     on          = POU.var(False)
     off         = POU.var(False)
@@ -21,14 +99,15 @@ class Equipment(SFC):
     test_on     = POU.var(False)
     test_alarm  = POU.var(int(0))
     override    = POU.var(False, persistent=True)
-
     fault       = POU.input(False)
     lock        = POU.input(False)
     q           = POU.output(False)
     msg         = POU.var('Ожидание команд')
 
 
-    def __init__(self, id = None, parent = None, fault = None, q = None, lock = None, depends = None, start = None, stop = None, manual = None):
+    def __init__(self, id = None, parent = None, fault = None, 
+                 q = None, lock = None, depends = None, start = None, 
+                 stop = None, manual = None):
         super().__init__(id, parent)
         self.state      = Equipment.IDLE
         self.allowed    = True
@@ -55,15 +134,13 @@ class Equipment(SFC):
 
 
     def set_start(self):
-        self.msg = 'сет старт'
         return self.start if self.manual else self.on
         
     def set_stop(self):
-        self.msg = 'сет стоп'
         return self.stop if self.manual else self.off
         
     def _turnon(self):
-        self.block = False
+        self.block  = False
 
     def _turnoff(self):
         self.allowed = True
@@ -86,31 +163,30 @@ class Equipment(SFC):
         return self.allowed
         
     def control(self, power):
-        self.msg = 'Зашли в контрол'
         if power and not self._allowed():
-            self.block = True
+            self.block  = True
             return
         self.q = power and not self.lock
         if power and self.lock:
-            self.block = True
+            self.block  = True
         if not power:
-            self.lock = False
+            self.lock   = False
 
     def _begin(self):
-        self.msg = 'Работа начата'
+        self.msg = f'{self.id} работа'
 
     def _end(self):
-        self.msg = 'Работа завершена'
+        self.msg = f'{self.id} завершено'
     
     def main(self):
-        self.msg = 'Начало работы'
+        self.msg    = f'{self.id} начало работы'
         self.state  = Equipment.IDLE
         self.ready  = False
         self.busy   = False
-        self.msg = 'Ожидание старта'
+        self.msg    = f'{self.id} oжидание старта'
         yield from self.until(lambda: self.q, step = "waiting start")
 
-        self.msg = 'Старт получен, запускаемся'
+        self.msg    = f'{self.id} cтарт'
 
         self.state = Equipment.STARTUP
         self._turnon()
@@ -123,7 +199,7 @@ class Equipment(SFC):
         if t < self.starting:
             self.ready = False
             if self.q and self.fault:
-                self.log('alarm stop after starting')
+                self.msg = f'{self.id} аварийный останов после старта'
         else:
             self.ready = True
             self.state = Equipment.RUN
@@ -133,38 +209,89 @@ class Equipment(SFC):
 
         self._turnoff()
         self._ctl.unset()
-        self.state  = Equipment.STOP
-        self.busy   = False
-        self.ready  = False
+        self.state      = Equipment.STOP
+        self.busy       = False
+        self.ready      = False
         if self.lock:
-            self.log('disabled -> lock')
-            self.block = True
+            self.msg    = f'{self.id} отключено -> заблокировано'
+            self.block  = True
 
-        self.q = False
+        self.q          = False
                 
 class EquipmentROT(Equipment):
     """Класс для управления оборудованием с датчиком вращения (конвейера, шнеки)"""
-    rotating = POU.var(False)
-    rot = POU.input(False, hidden = True)
+    rotating    = POU.var(False)
+    rot         = POU.input(False, hidden = True)
+    speed_p     = POU.var(100, persistent=True)
+    speed_msg   = POU.var('Ожидание значения скорости')
+    slave_addr  = POU.var(1) 
     
-    def __init__(self, fault: bool = None, q: bool = None, lock: bool = None, rot: bool = None, depends: Equipment = None, id: str = None, parent: POU = None, start = None, stop = None, manual = None):
+    def __init__(self, fault: bool = None, q: bool = None, lock: bool = None, rot: bool = None, 
+                 depends: Equipment = None, id: str = None, parent: POU = None, start = None, 
+                 stop = None, manual = None, slave_addr=1):
         super().__init__(fault=fault, q=q, lock=lock, depends=depends, id=id, parent=parent)
-        self.rot = rot
-        self._rotating = TOF(clk = TRIG(clk = lambda: self.rot), q = self.monitor)
-        self.subtasks += (self._rotating, )
-
+        self.rot            = rot
+        self._rotating      = TOF(clk = TRIG(clk = lambda: self.rot), q = self.monitor)
+        self.slave_addr     = slave_addr
+        self._modbus_client = ModbusClient()
+        self._last_mb_send  = 0
+        self._prev_speed    = int(self.speed_p)
+        self.set_speed(int(self.speed_p))
+        self.subtasks       += (self._rotating, )
 
     def monitor(self, rot: bool):
         self.rotating = rot
         if not rot and self.q:
             self.ok = False
-            self.log('ошибка: нет вращения')
+            self.msg = f'{self.id} ошибка: нет вращения'
 
-    def set_timeout(self, speed_value=1500):
+
+    def set_speed(self, speed_percent: int):
+        print(speed_percent)
+        if 100 >= speed_percent >= 0:
+            speed_value = int(1500 * speed_percent / 100)
+            self.set_timeout(speed_value)
+            self.speed_msg = f'Скорость {speed_value}: {speed_percent}%'
+            
+            self._modbus_client.write_register(
+                self.slave_addr,
+                2,
+                speed_value
+            )
+            
+            return True
+        return False
+    
+
+    def set_timeout(self, speed_value):
         if      speed_value < 500:  self._rotating.pt = 35000
         elif    speed_value < 1000: self._rotating.pt = 25000
         elif    speed_value < 1500: self._rotating.pt = 15000
         else:                       self._rotating.pt = 35000
+    
+    def main(self):
+        parent_main = super().main()
+        
+        while True:
+            if self.speed_p != self._prev_speed:
+                self.set_speed(self.speed_p)
+                self._prev_speed = self.speed_p
+            
+            current_time = int(time.time() * 1000)
+            if current_time - self._last_mb_send > 1000:
+                self._modbus_client.write_register(
+                    self.slave_addr,
+                    2,
+                    int(1500 * self.speed_p / 100)
+                )
+                self._last_mb_send = current_time
+            
+            try:
+                next(parent_main)
+            except StopIteration:
+                break
+                
+            yield
 
 class EquipmentFeeder(EquipmentROT):
     pult_start = POU.input(False)
@@ -172,13 +299,11 @@ class EquipmentFeeder(EquipmentROT):
     
     def __init__(self, pult_start=None, pult_stop=None, **kwargs):
         super().__init__(**kwargs)
-        self.pult_start = pult_start
-        self.pult_stop = pult_stop
-        
-        self._pult_start_trig = RTRIG(clk=lambda: self.pult_start)
-        self._pult_stop_trig = RTRIG(clk=lambda: self.pult_stop)
-        
-        self.subtasks += (self._pult_start_trig, self._pult_stop_trig)
+        self.pult_start         = pult_start
+        self.pult_stop          = pult_stop
+        self._pult_start_trig   = RTRIG(clk=lambda: self.pult_start)
+        self._pult_stop_trig    = RTRIG(clk=lambda: self.pult_stop)
+        self.subtasks           += (self._pult_start_trig, self._pult_stop_trig)
     
     def set_start(self):
         base = super().set_start()
@@ -195,7 +320,7 @@ class EquipmentFeeder(EquipmentROT):
 class EquipmentDrum(Equipment):
     def __init__(self, q=None, depends=None, start=None, stop=None, fault=None, **kwargs):
         super().__init__(q=q, depends=depends, start=start, stop=stop, 
-                        manual=None, fault=fault, **kwargs)
+                         manual=None, fault=fault, **kwargs)
     
     def set_start(self):
         return self.on
@@ -213,14 +338,8 @@ class EquipmentPack(EquipmentROT):
     
     def set_start(self):
         base_start = super().set_start()
-        
-        if self.manual:
-            result = self.gate and base_start
-            print(f'Ручной: {self.id} gate={self.gate}, base={base_start} -> {result}') 
-        else:
-            result = self.gate or base_start
-            print(f'Авто: {self.id} gate={self.gate}, base={base_start} -> {result}') 
-        
+        if self.manual: result = self.gate and base_start
+        else: result = self.gate or base_start
         return result
     
     def set_stop(self):
@@ -228,8 +347,6 @@ class EquipmentPack(EquipmentROT):
         return not self.gate or base_stop
     
     def _allowed(self):
-        print(f'{self.id}: gate value = {self.gate}, lock = {self.lock}')
-        
         self.allowed = True
         
         if self.depends is not None and not self.manual:
@@ -241,7 +358,6 @@ class EquipmentPack(EquipmentROT):
         
         self.allowed = not self.lock
         
-        print(f'{self.id}: final allowed = {self.allowed}')
         return self.allowed
 
     
@@ -249,8 +365,8 @@ class EquipmentAutoStart(Equipment):
     def __init__(self, auto_start_on=None, **kwargs):
         self.auto_start_on = self._ensure_tuple(auto_start_on)
         super().__init__(**kwargs)
-        self._dummy = TOF(clk=lambda: False, pt=1000)
-        self.subtasks += (self._dummy,)
+        self._dummy         = TOF(clk=lambda: False, pt=1000)
+        self.subtasks       += (self._dummy, )
     
     def set_start(self):
         base_start = super().set_start()
@@ -296,12 +412,12 @@ class EquipmentChain(SFC):
 
     def __init__(self, gears: tuple[Equipment], id: str = None, parent: POU = None) -> None:
         super().__init__( id=id, parent=parent)
-        self.gears = gears
-        self._t_on = FTRIG(clk = lambda: self.on )
-        self._t_off= RTRIG(clk = lambda: self.off )
-        self._t_emerg=FTRIG(clk=lambda: self.emerg)
-        self.subtasks = (self._t_on, self._t_off, self._t_emerg)
-        self.state = EquipmentChain.IDLE
+        self.gears      = gears
+        self._t_on      = FTRIG(clk = lambda: self.on )
+        self._t_off     = RTRIG(clk = lambda: self.off )
+        self._t_emerg   = FTRIG(clk=lambda: self.emerg)
+        self.subtasks   = (self._t_on, self._t_off, self._t_emerg)
+        self.state      = EquipmentChain.IDLE
 
     def _countdown(self, gear, action, total_time, condition):
         remaining = total_time

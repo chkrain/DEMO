@@ -36,153 +36,11 @@ QPushButton[style=&quot;start&quot;] {
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="Animation" name="M1">
-    <property name="geometry">
-     <rect>
-      <x>1600</x>
-      <y>120</y>
-      <width>201</width>
-      <height>204</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/images/tconveyor.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation">
-    <property name="geometry">
-     <rect>
-      <x>1600</x>
-      <y>320</y>
-      <width>177</width>
-      <height>175</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_2">
-    <property name="geometry">
-     <rect>
-      <x>1400</x>
-      <y>500</y>
-      <width>392</width>
-      <height>54</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_3">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>1340</x>
-      <y>330</y>
-      <width>175</width>
-      <height>154</height>
-     </rect>
-    </property>
-    <property name="palette">
-     <palette>
-      <active>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>97</green>
-          <blue>81</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </active>
-      <inactive>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>97</green>
-          <blue>81</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </inactive>
-      <disabled>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>97</green>
-          <blue>81</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </disabled>
-     </palette>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/in_container.png</string>
-     </url>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_4">
-    <property name="geometry">
-     <rect>
-      <x>1110</x>
-      <y>190</y>
-      <width>201</width>
-      <height>204</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/images/tconveyor.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_7">
-    <property name="geometry">
-     <rect>
-      <x>1180</x>
-      <y>20</y>
-      <width>177</width>
-      <height>175</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
-     </url>
-    </property>
-   </widget>
    <widget class="Animation" name="animation_9">
     <property name="geometry">
      <rect>
-      <x>1000</x>
-      <y>500</y>
+      <x>10</x>
+      <y>290</y>
       <width>392</width>
       <height>54</height>
      </rect>
@@ -196,198 +54,496 @@ QPushButton[style=&quot;start&quot;] {
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="Animation" name="animation_10">
+   <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>190</y>
-      <width>758</width>
-      <height>287</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/drum.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_11">
-    <property name="geometry">
-     <rect>
-      <x>950</x>
-      <y>320</y>
-      <width>177</width>
-      <height>175</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/siever.png</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_12">
-    <property name="geometry">
-     <rect>
-      <x>770</x>
-      <y>70</y>
-      <width>392</width>
-      <height>54</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_5">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>680</y>
-      <width>9</width>
-      <height>18</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_8">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>490</y>
-      <width>298</width>
-      <height>396</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/resources/exhaust.png</string>
-     </url>
-    </property>
-   </widget>
-   <widget class="Animation" name="animation_13">
-    <property name="geometry">
-     <rect>
-      <x>590</x>
-      <y>500</y>
-      <width>392</width>
-      <height>54</height>
-     </rect>
-    </property>
-    <property name="source">
-     <url>
-      <string>file:///home/ainur/Documents/DEMO/img/images/conveyor.mng</string>
-     </url>
-    </property>
-    <property name="running">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pu_1_start">
-    <property name="geometry">
-     <rect>
-      <x>1540</x>
-      <y>50</y>
+      <x>20</x>
+      <y>210</y>
       <width>110</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
-     <string>СТАРТ ПУ1</string>
-    </property>
-    <property name="checkable">
-     <bool>false</bool>
+     <string>stop</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pu_1_stop">
+   <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>1540</x>
-      <y>90</y>
+      <x>140</x>
+      <y>210</y>
       <width>110</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
-     <string>СТОП ПУ1</string>
+     <string>start</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pu_2_start">
+   <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>110</y>
+      <x>270</x>
+      <y>210</y>
       <width>110</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
-     <string>СТАРТ ПУ2</string>
+     <string>alarm</string>
     </property>
-   </widget>
-   <widget class="QPushButton" name="pu_2_stop">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>150</y>
-      <width>110</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>СТОП ПУ2</string>
-    </property>
-   </widget>
-   <widget class="CtlGen" name="ctlgen_2">
-    <property name="geometry">
-     <rect>
-      <x>1330</x>
-      <y>230</y>
-      <width>265</width>
-      <height>77</height>
-     </rect>
+    <property name="rsn" stdset="0">
+     <number>0</number>
     </property>
    </widget>
    <widget class="QLabel" name="label">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
     <property name="geometry">
      <rect>
-      <x>1350</x>
-      <y>590</y>
-      <width>175</width>
-      <height>154</height>
+      <x>20</x>
+      <y>260</y>
+      <width>66</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>x</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>mechanism</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_4">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>starttt</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_5">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>20</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>stopp</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>70</y>
+      <width>66</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>manual</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>260</y>
+      <width>66</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ready</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>70</y>
+      <width>66</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ready</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_6">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>660</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>cascade</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_7">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>700</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>cascade off</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_8">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>740</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>emerg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>820</y>
+      <width>1001</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
-    <property name="pixmap">
-     <pixmap>../img/resources/in_container.png</pixmap>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>30</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>3</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>30</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>4</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>30</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>5</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>30</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>6</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>70</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>7</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>110</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>8</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>110</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>10</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_14">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>160</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>11</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_15">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>160</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>12</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_16">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>160</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>13</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_17">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>370</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>17</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>370</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>19</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_19">
+    <property name="geometry">
+     <rect>
+      <x>560</x>
+      <y>440</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>20</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_20">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>400</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>18</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_21">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>500</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>comp</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_22">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>310</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>16</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_23">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>260</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>15</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_24">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>210</y>
+      <width>91</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>14</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_25">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>558</y>
+      <width>411</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_26">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>370</y>
+      <width>231</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_27">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>400</y>
+      <width>251</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_28">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>430</y>
+      <width>231</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>x</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="doubleSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>360</y>
+      <width>65</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
     </property>
    </widget>
   </widget>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>CtlGen</class>
-   <extends>QWidget</extends>
-   <header>customplugin</header>
-  </customwidget>
   <customwidget>
    <class>Animation</class>
    <extends>QLabel</extends>

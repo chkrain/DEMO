@@ -90,6 +90,4 @@ class IGate(POU):
                     self.equipment.gate.force(self._gate_state)
                 else:
                     self.equipment.gate = self._gate_state
-                print(f'Gate changed to: {self._gate_state}')
-                print(f'Equipment gate actual value: {self.equipment.gate}')
                 
