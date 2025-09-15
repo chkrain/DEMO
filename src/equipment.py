@@ -5,6 +5,9 @@ from pyplc.utils.misc import TOF
 from _thread import start_new_thread,allocate_lock
 from umodbus.tcp import TCP as ModbusTCPMaster
 import time
+from tg import TelegramMonitor
+
+telegram_monitor = None
 
 class ModbusClient:
     _instance   = None
@@ -95,14 +98,16 @@ class Equipment(SFC):
     stop        = POU.input(False, hidden=True)
     manual      = POU.input(False)
     block       = POU.var(False)
-    starting    = POU.var(int(1), persistent=True) # 1 sec
+    starting    = POU.var(int(1))
     test_on     = POU.var(False)
     test_alarm  = POU.var(int(0))
     override    = POU.var(False, persistent=True)
     fault       = POU.input(False)
     lock        = POU.input(False)
     q           = POU.output(False)
-    msg         = POU.var('Ожидание команд')
+    msg         = POU.var(str('Ожидание команд'))
+    er_msg      = POU.var(str('Норма'))
+    er_r        = POU.var(bool(False))
 
 
     def __init__(self, id = None, parent = None, fault = None, 
@@ -153,6 +158,8 @@ class Equipment(SFC):
                     return False
                 if dep.fault: 
                     self.allowed = False
+                    self.er_msg = f"{self.id} АВАРИЯ: трос"
+                    
         else:
             self.allowed = not self.lock
 
@@ -200,6 +207,10 @@ class Equipment(SFC):
             self.ready = False
             if self.q and self.fault:
                 self.msg = f'{self.id} аварийный останов после старта'
+
+                if telegram_monitor:
+                    telegram_monitor.send_message(f"🚨 АВАРИЯ: {self.id} - трос")
+
         else:
             self.ready = True
             self.state = Equipment.RUN
@@ -215,7 +226,10 @@ class Equipment(SFC):
         if self.lock:
             self.msg    = f'{self.id} отключено -> заблокировано'
             self.block  = True
-
+        if self.fault:
+            self.er_msg = f'{self.id} АВАРИЯ: трос'
+            if telegram_monitor:
+                telegram_monitor.send_message(f"🚨 АВАРИЯ ТРОСА: {self.id}")
         self.q          = False
                 
 class EquipmentROT(Equipment):
@@ -242,12 +256,15 @@ class EquipmentROT(Equipment):
     def monitor(self, rot: bool):
         self.rotating = rot
         if not rot and self.q:
-            self.ok = False
-            self.msg = f'{self.id} ошибка: нет вращения'
+            self.on     = False
+            self.off    = True
+            self.er_msg = f'{self.id} АВАРИЯ: нет движения ленты'
+
+            if telegram_monitor:
+                telegram_monitor.send_message(f"⚠️ НЕТ ВРАЩЕНИЯ: {self.id}. Возможен обрыв ленты/пробуксовка")
 
 
     def set_speed(self, speed_percent: int):
-        print(speed_percent)
         if 100 >= speed_percent >= 0:
             speed_value = int(1500 * speed_percent / 100)
             self.set_timeout(speed_value)
@@ -333,7 +350,6 @@ class EquipmentPack(EquipmentROT):
     
     def __init__(self, gate=False, **kwargs):
         super().__init__(**kwargs)
-        print(f'EquipmentPack {self.id}: gate bound to {gate}')
 
     
     def set_start(self):
@@ -354,8 +370,9 @@ class EquipmentPack(EquipmentROT):
                 if dep.state != Equipment.RUN:
                     return False
                 if dep.fault: 
-                    self.allowed = False
-        
+                    self.allowed    = False
+                    self.er_msg     = f'{self.id} АВАРИЯ: трос у соседа'
+                    
         self.allowed = not self.lock
         
         return self.allowed
@@ -453,6 +470,9 @@ class EquipmentChain(SFC):
             self.state = EquipmentChain.IDLE
             self.msg = 'ГОТОВ | Ожидание команды'
 
+            if telegram_monitor:
+                telegram_monitor.send_message("✅ КАСКАДНЫЙ ЗАПУСК ЗАВЕРШЕН")
+
     def _stop(self):
         self.state = EquipmentChain.STOPPING
         for gear in reversed(self.gears):
@@ -472,16 +492,28 @@ class EquipmentChain(SFC):
         if self.state==EquipmentChain.STOPPING: 
             self.state = EquipmentChain.IDLE
             self.msg = 'ГОТОВ'
+            if telegram_monitor:
+                telegram_monitor.send_message("✅ КАСКАДНЫЙ ОСТАНОВ ЗАВЕРШЕН")
 
     def _emergency(self):
         self.state = EquipmentChain.EMERGENCY
         for gear in self.gears:
             gear.off = True
 
+        Burner.stop_cmd = True
+
+        if telegram_monitor:
+            telegram_monitor.send_message("🚨 СРАБОТАЛ АВАРИЙНЫЙ ОСТАНОВ ВСЕГО ОБОРУДОВАНИЯ")
+
     def _emergency_off(self):
         self.state = EquipmentChain.IDLE
         for gear in self.gears:
             gear.off = False
+
+        Burner.stop_cmd = False
+
+        if telegram_monitor:
+            telegram_monitor.send_message("✅ АВАРИЙНАЫЙ ОСТАНОВ СНЯТ")
 
 
     def main(self):
@@ -500,12 +532,138 @@ class EquipmentChain(SFC):
         if self._t_on.q:
             if self.state!=EquipmentChain.STARTING:
                 self.msg='Последовательный запуск активирован'
+                if telegram_monitor:
+                    telegram_monitor.send_message("▶️ ЗАПУСК КАСКАДА")
                 self.exec(self._start())
             else:
                 self.state=EquipmentChain.IDLE
         elif self._t_off.q:
             if self.state!=EquipmentChain.STOPPING:
                 self.msg='Последовательный останов активирован'
+                if telegram_monitor:
+                    telegram_monitor.send_message("⏹️ ОСТАНОВ КАСКАДА")
                 self.exec(self._stop() )
             else:
                 self.state=EquipmentChain.IDLE
+
+
+
+
+
+
+
+# тест горелки
+
+class Burner(SFC):
+    start_cmd   = POU.input(False)
+    stop_cmd    = POU.input(False)
+    q           = POU.output(False)
+    msg         = POU.var("Ожидание")
+    
+    def __init__(self, id=None, parent=None, depends=None, **kwargs):
+        super().__init__(id, parent)
+        self.depends = self._ensure_tuple(depends)
+        self._start_trig = RTRIG(clk=lambda: self.start_cmd)
+        self._stop_trig = RTRIG(clk=lambda: self.stop_cmd)
+        self.subtasks = (self._start_trig, self._stop_trig)
+        self._was_on = False
+        self._prev_conditions_ok = True 
+    
+    def _ensure_tuple(self, value):
+        if value is None:
+            return ()
+        return value if isinstance(value, tuple) else (value,)
+    
+    def _check_conditions(self):
+        if self.depends:
+            for equipment in self.depends:
+                if hasattr(equipment, 'state'):
+                    if equipment.state != Equipment.RUN:
+                        return False
+                elif hasattr(equipment, 'q'):
+                    if not equipment.q:
+                        return False
+        
+        return True
+    
+    def main(self):
+        while True:
+            conditions_ok = self._check_conditions()
+            
+            if not conditions_ok and self.q:
+                self.q = False
+                self.msg = f"{self.id} - Остановлена из-за нарушения условий"
+                
+                if telegram_monitor:
+                    equipment_names = ", ".join([dep.id for dep in self.depends if hasattr(dep, 'id')])
+                    telegram_monitor.send_message(f"🔥 {self.id} - Горелка остановлена из-за нарушения условий работы оборудования: {equipment_names}")
+                
+                self._was_on = False
+                yield
+                continue
+            
+            if conditions_ok:
+                if self._start_trig.q:
+                    self.q = True
+                    self.msg = f"{self.id} - Запущена"
+                    self._was_on = True
+                    if telegram_monitor:
+                        telegram_monitor.send_message(f"🔥 {self.id} - Горелка запущена")
+                
+                if self._stop_trig.q:
+                    self.q = False
+                    self.msg = f"{self.id} - Остановлена"
+                    self._was_on = False
+                    if telegram_monitor:
+                        telegram_monitor.send_message(f"🔥 {self.id} - Горелка остановлена")
+            
+            if conditions_ok and not self._prev_conditions_ok and not self.q:
+                self.msg = f"{self.id} - Условия восстановлены, ожидание команды"
+                if telegram_monitor:
+                    telegram_monitor.send_message(f"✅🔥 {self.id} - Условия работы горелки соблюдены, оборудование готово к запуску")
+            
+            self._prev_conditions_ok = conditions_ok
+            yield
+
+class Analog(SFC):
+    raw_value   = POU.input(0, persistent=True)        # Сырое значение из ПЛК 
+    value       = POU.output(0, persistent=True)       # То же значение для использования в программе
+    threshold   = POU.var(5, persistent=True)          # Порог изменения для уведомления (%)
+    _prev_value = POU.var(0, persistent=True)          # Предыдущее значение
+    _first_scan = POU.var(True)                        # Первый сканирование
+    
+    def __init__(self, id=None, parent=None, raw_value=None, threshold=5):
+        super().__init__(id=id, parent=parent)
+        if raw_value:
+            self.raw_value = raw_value
+        self.threshold = threshold
+    
+    def _check_change(self, new_value, old_value):
+        if old_value == 0: 
+            return False
+        
+        change_percent = abs((new_value - old_value) / old_value) * 100
+        return change_percent > self.threshold
+    
+    def main(self):
+        while True:
+            current_value = self.raw_value
+            
+            if self._first_scan:
+                self._prev_value = current_value
+                self._first_scan = False
+                self.value = current_value
+                yield
+                continue
+            
+            if self._check_change(current_value, self._prev_value):
+                if telegram_monitor:
+                    message = f"📊 {self.id}: {self._prev_value} → {current_value} (изменение на {abs(current_value - self._prev_value)})"
+                    telegram_monitor.send_message(message)
+                
+                print(f"{self.id}: значение изменилось с {self._prev_value} на {current_value}")
+            
+            self.value = current_value
+            self._prev_value = current_value
+            
+            yield

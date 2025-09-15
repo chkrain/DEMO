@@ -1,1 +1,54 @@
-token = None
+# tg.py
+from pyplc.core import POU
+import requests
+import time
+import threading
+from collections import deque
+
+class TelegramMonitor(POU):
+    def __init__(self, bot_token, chat_id):
+        super().__init__()
+        self.bot_token = bot_token
+        self.chat_id = chat_id
+        self.message_queue = deque()
+        self.running = True
+        
+        # Запускаем поток для отправки сообщений
+        self.thread = threading.Thread(target=self._send_messages_worker, daemon=True)
+        self.thread.start()
+        
+        # Отправляем сообщение о запуске
+        self.send_message("Бот в сети")
+    
+    def send_message(self, message):
+        """Просто добавить сообщение в очередь"""
+        full_message = f"{message}\n\n⏰ {time.strftime('%Y-%m-%d %H:%M:%S')}"
+        self.message_queue.append(full_message)
+    
+    def _send_messages_worker(self):
+        """Рабочий поток для отправки сообщений"""
+        while self.running:
+            if self.message_queue:
+                message = self.message_queue.popleft()
+                self._send_telegram_message(message)
+            time.sleep(1)
+    
+    def _send_telegram_message(self, message):
+        """Отправка сообщения в Telegram"""
+        try:
+            url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+            payload = {
+                "chat_id": self.chat_id,
+                "text": message
+            }
+            
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code != 200:
+                print(f"Ошибка отправки в Telegram: {response.text}")
+        except Exception as e:
+            print(f"Ошибка при отправке сообщения: {e}")
+    
+    def stop(self):
+        """Остановка монитора"""
+        self.running = False
+        self.thread.join()

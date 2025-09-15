@@ -1,0 +1,11 @@
+[Desktop Entry]
+Exec=pysca-hmi
+Name=PYSCA-HMI 
+Type=Application
+Icon=pysca-hmi
+Version=1.0
+Terminal=false
+Comment=АСУ PYSCA-HMI
+Path=/usr/share/pysca-hmi
+StartupNotify=true
+

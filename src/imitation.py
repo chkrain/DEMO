@@ -32,7 +32,7 @@ class IRotation(POU):
     def __init__(self, q: bool | Any = None, rot:bool | Any  = None, id: str | Any = None, parent: POU | Any = None) -> None:
         super().__init__(id, parent)
         self.rot=rot.force if hasattr(rot,'force') else rot
-        self.blink = BLINK(enable = q,q = IRotation.rot(self), t_on = 100, t_off = 500 )
+        self.blink = BLINK(enable = q,q = IRotation.rot(self), t_on = 100, t_off = 5000 )
         
     def __call__(self):
         with self:
@@ -91,3 +91,27 @@ class IGate(POU):
                 else:
                     self.equipment.gate = self._gate_state
                 
+class IForce(POU):
+    def __init__(self, id: str = None, parent: POU = None):
+        super().__init__(id, parent)
+        
+    def force_analog(self, channel, value):
+        if hasattr(channel, 'force'):
+            channel.force(value)
+        else:
+            print(f"Ошибка: канал {channel} не поддерживает форсирование")
+            
+    def unforce_analog(self, channel):
+        if hasattr(channel, 'force'):
+            channel.force(None)
+            
+    def force_digital(self, channel, value):
+        if hasattr(channel, 'force'):
+            channel.force(bool(value))
+        else:
+            print(f"Ошибка: канал {channel} не поддерживает форсирование")
+            
+    def unforce_digital(self, channel):
+        if hasattr(channel, 'force'):
+            channel.force(None)
+            

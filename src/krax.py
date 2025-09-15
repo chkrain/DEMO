@@ -1,9 +1,9 @@
 from pyplc.platform import plc
 from pyplc.utils.misc import TOF,TON
-from equipment import EquipmentROT, Equipment, EquipmentChain, EquipmentDrum, EquipmentPack, EquipmentAutoStart, EquipmentROTAutoStart, EquipmentFeeder
+from equipment import EquipmentROT, Equipment, EquipmentChain, EquipmentDrum, EquipmentPack, EquipmentAutoStart, EquipmentROTAutoStart, EquipmentFeeder, Burner, Analog
 from sys import platform
 from collections import namedtuple
-from pyplc.utils.bindable import Property
+from tg import TelegramMonitor
 
 
 m1 = EquipmentFeeder(q = plc.M1_ISON, rot = plc.M1_BELT, fault = plc.M1_ROPE, start = plc.M1_START, 
@@ -33,7 +33,9 @@ m10 = EquipmentROT(q = plc.M10_ISON, rot = plc.M10_BELT, fault = plc.M10_ROPE, s
 m11 = EquipmentDrum(start=plc.M11_ESTART, stop=plc.M11_ESTOP, fault=None, q=plc.M11_ISON)
 
 m12 = EquipmentROTAutoStart(q = plc.FAN_ISON, rot = True, fault = None, start = plc.M12_START, 
-                        stop = plc.M12_STOP, manual = plc.M12_MAN, depends = None, lock = None, auto_start_on=(m11, m10, m1))
+                        stop = plc.M12_STOP, manual = plc.M12_MAN, depends = None, lock = None, auto_start_on=(m11, m10, m1, ))
+
+burner = Burner(depends=(m12, ))
 
 m14 = EquipmentROT(q = plc.M14_ISON, rot = plc.M14_BELT, fault = plc.M14_ROPE, start = plc.M14_START, 
                         stop = plc.M14_STOP, manual = plc.M14_MAN, depends = m11, lock = plc.M14_ROPE, slave_addr=5)
@@ -59,12 +61,40 @@ m20 = EquipmentPack(q = plc.M20_ISON, rot = plc.M20_BELT, fault = plc.M20_ROPE, 
 compressor = EquipmentAutoStart(q = plc.COMPRES_ISON, depends=None, start = plc.COMPRES_START, 
                                 stop = plc.COMPRES_STOP, manual = plc.COMPRES_MAN, auto_start_on=(m7, m8, m18, m20))
 
+temp_enter = Analog(raw_value=plc.TEMP_ENTER, threshold=10)
+
+temp_exit = Analog(raw_value=plc.TEMP_EXIT, threshold=10)
+
+humidity = Analog(raw_value=plc.HUMIDITY_EXIT, threshold=10)
+
+set_temp = Analog(raw_value=plc.TEMP_BURNER, threshold=5)
+
 cascade = EquipmentChain( gears=(m1, m2, m3, m4, m5, m6, m7, m10, m11, m14, m15, m16, m17, m18, m19))
 
-instances =  (m1, m2, m3, m4, m5, m6, m7, m8, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, cascade, compressor, ) 
+instances =  (m1, m2, m3, m4, m5, m6, m7, m8, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, cascade, compressor, burner, temp_enter, temp_exit, set_temp, humidity ) 
+
+try:
+    telegram_monitor = TelegramMonitor(
+        bot_token="8498968450:AAEwT6cGva0jNTAdSJPd0Z4jumP_ViitV-s",
+        chat_id="-1003089235411"
+    )
+    
+    import equipment
+    equipment.telegram_monitor = telegram_monitor
+    
+except Exception as e:
+    print(f"Не удалось инициализировать Telegram бота: {e}")
+    telegram_monitor = None
+
+if telegram_monitor:
+    instances += (telegram_monitor,)
 
 if platform == 'linux':
-    from imitation import IRotation, IGate
+    from imitation import IRotation, IGate, IForce
+
+    force = IForce()
+    force.force_analog(plc.TEMP_ENTER, 3000)
+    force.force_analog(plc.TEMP_EXIT, 2000)
 
     irot1 = IRotation(q = plc.M1_ISON, rot = plc.M1_BELT)
     irot2 = IRotation(q = plc.M3_ISON, rot = plc.M3_BELT)
@@ -82,6 +112,6 @@ if platform == 'linux':
     igate_input2 = IGate(equipment=m20)
 
     
-    instances += (igate_input1, igate_input2, irot1, irot2,irot3,irot4,irot5,irot6,irot7,irot8,irot9,irot10,irot11,)
+    instances += (igate_input1, igate_input2, irot1, irot2,irot3,irot4,irot5,irot6,irot7,irot8,irot9,irot10,irot11, force)
 
 plc.run(instances=instances, ctx=globals()) 
