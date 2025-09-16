@@ -120,6 +120,9 @@ class Equipment(SFC):
         super().__init__(id, parent)
         self.state      = Equipment.IDLE
         self.allowed    = True
+        self.start      = start 
+        self.stop       = stop   
+        self.manual     = manual 
         self.fault      = fault
         self.lock       = lock
         self.depends    = self._ensure_tuple(depends)
@@ -247,7 +250,8 @@ class EquipmentROT(Equipment):
     def __init__(self, fault: bool = None, q: bool = None, lock: bool = None, rot: bool = None, 
                  depends: Equipment = None, id: str = None, parent: POU = None, start = None, 
                  stop = None, manual = None, slave_addr=1):
-        super().__init__(fault=fault, q=q, lock=lock, depends=depends, id=id, parent=parent)
+        super().__init__(fault=fault, q=q, lock=lock, depends=depends, id=id, parent=parent,
+                         start=start, stop=stop, manual=manual)
         self.rot            = rot
         self._rotating      = TOF(clk = TRIG(clk = lambda: self.rot), q = self.monitor)
         self.slave_addr     = slave_addr
