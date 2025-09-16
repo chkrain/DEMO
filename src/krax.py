@@ -3,11 +3,11 @@ from pyplc.utils.misc import TOF,TON
 from equipment import EquipmentROT, Equipment, EquipmentChain, EquipmentDrum, EquipmentPack, EquipmentAutoStart, EquipmentROTAutoStart, EquipmentFeeder, Burner, Analog
 from sys import platform
 from collections import namedtuple
-from tg import TelegramMonitor
 
 
 m1 = EquipmentFeeder(q = plc.M1_ISON, rot = plc.M1_BELT, fault = plc.M1_ROPE, start = plc.M1_START, 
-                        stop = plc.M1_STOP, manual = plc.M1_MAN, depends = None, lock = plc.M1_ROPE, pult_start=plc.M1_ESTART, pult_stop=plc.M1_ESTOP, slave_addr=1) 
+                        stop = plc.M1_STOP, manual = plc.M1_MAN, depends = None, lock = plc.M1_ROPE, pult_start=plc.M1_ESTART, 
+                        pult_stop=plc.M1_ESTOP, slave_addr=1) 
 
 m2 = Equipment(q = plc.M2_ISON, depends=m1, start = plc.M2_START, stop = plc.M2_STOP, manual = plc.M2_MAN, fault=None, lock=None)
 
@@ -32,7 +32,7 @@ m10 = EquipmentROT(q = plc.M10_ISON, rot = plc.M10_BELT, fault = plc.M10_ROPE, s
 
 m11 = EquipmentDrum(start=plc.M11_ESTART, stop=plc.M11_ESTOP, fault=None, q=plc.M11_ISON)
 
-m12 = EquipmentROTAutoStart(q = plc.FAN_ISON, rot = True, fault = None, start = plc.M12_START, 
+m12 = EquipmentROTAutoStart(q = plc.FAN_ISON, rot = True, fault = None, start = plc.M12_START, slave_addr=4,
                         stop = plc.M12_STOP, manual = plc.M12_MAN, depends = None, lock = None, auto_start_on=(m11, m10, m1, ))
 
 burner = Burner(depends=(m12, ))
@@ -74,20 +74,12 @@ cascade = EquipmentChain( gears=(m1, m2, m3, m4, m5, m6, m7, m10, m11, m14, m15,
 instances =  (m1, m2, m3, m4, m5, m6, m7, m8, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, cascade, compressor, burner, temp_enter, temp_exit, set_temp, humidity ) 
 
 try:
-    telegram_monitor = TelegramMonitor(
-        bot_token="8498968450:AAEwT6cGva0jNTAdSJPd0Z4jumP_ViitV-s",
-        chat_id="-1003089235411"
-    )
-    
-    import equipment
-    equipment.telegram_monitor = telegram_monitor
-    
-except Exception as e:
-    print(f"Не удалось инициализировать Telegram бота: {e}")
-    telegram_monitor = None
+    from equipment import telegram_monitor
 
-if telegram_monitor:
-    instances += (telegram_monitor,)
+    if telegram_monitor:
+        instances += (telegram_monitor,)
+except Exception as e:
+    print(f'Не удалось запустить бота: {e}')
 
 if platform == 'linux':
     from imitation import IRotation, IGate, IForce

@@ -2,7 +2,7 @@
 from pyplc.core import POU
 import requests
 import time
-import threading
+import _thread  
 from collections import deque
 
 class TelegramMonitor(POU):
@@ -12,24 +12,29 @@ class TelegramMonitor(POU):
         self.chat_id = chat_id
         self.message_queue = deque()
         self.running = True
+        self.lock = _thread.allocate_lock()
         
         # Запускаем поток для отправки сообщений
-        self.thread = threading.Thread(target=self._send_messages_worker, daemon=True)
-        self.thread.start()
+        _thread.start_new_thread(self._send_messages_worker, ())
         
         # Отправляем сообщение о запуске
         self.send_message("Бот в сети")
     
     def send_message(self, message):
-        """Просто добавить сообщение в очередь"""
-        full_message = f"{message}\n\n⏰ {time.strftime('%Y-%m-%d %H:%M:%S')}"
-        self.message_queue.append(full_message)
+        """Просто добавить сообщение в очередь"""       
+        full_message = f"{message}"
+        with self.lock:
+            self.message_queue.append(full_message)
     
     def _send_messages_worker(self):
         """Рабочий поток для отправки сообщений"""
         while self.running:
-            if self.message_queue:
-                message = self.message_queue.popleft()
+            message = None
+            with self.lock:
+                if self.message_queue:
+                    message = self.message_queue.popleft()
+            
+            if message:
                 self._send_telegram_message(message)
             time.sleep(1)
     
@@ -51,4 +56,3 @@ class TelegramMonitor(POU):
     def stop(self):
         """Остановка монитора"""
         self.running = False
-        self.thread.join()

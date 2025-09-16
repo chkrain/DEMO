@@ -5,9 +5,13 @@ from pyplc.utils.misc import TOF
 from _thread import start_new_thread,allocate_lock
 from umodbus.tcp import TCP as ModbusTCPMaster
 import time
-from tg import TelegramMonitor
 
-telegram_monitor = None
+try:
+    from tg import TelegramMonitor
+    telegram_monitor = TelegramMonitor(bot_token="8498968450:AAEwT6cGva0jNTAdSJPd0Z4jumP_ViitV-s", chat_id="-1003089235411")
+except Exception as e:
+    print(f"Не удалось инициализировать Telegram бота: {e}")
+    telegram_monitor = None
 
 class ModbusClient:
     _instance   = None
@@ -28,7 +32,7 @@ class ModbusClient:
             return True
             
         try:
-            self.host       = ModbusTCPMaster(slave_ip='192.168.8.10', slave_port=502, timeout=3)
+            self.host       = ModbusTCPMaster(slave_ip='192.168.8.15', slave_port=502, timeout=3)
             self.connected  = True
             print("Модбас подключен")
             return True
@@ -57,7 +61,7 @@ class ModbusClient:
                     if task[0] == 'write' and self.host:
                         try:
                             result = self.host.write_single_register(slave_addr=task[1], register_address=task[2], register_value=task[3])
-                            print(f'Modbus write: slave={task[1]}, reg={task[2]}, value={task[3]}, result={result}')
+                            print(f' Modbus write: slave={task[1]}, reg={task[2]}, value={task[3]}, result={result}')
                         except Exception as e:
                             print(f'Ошибка записи: {e}')
                             self.connected  = False
@@ -142,7 +146,7 @@ class Equipment(SFC):
         return self.start if self.manual else self.on
         
     def set_stop(self):
-        return self.stop if self.manual else self.off
+        return not self.stop if self.manual else self.off # not
         
     def _turnon(self):
         self.block  = False
@@ -295,7 +299,7 @@ class EquipmentROT(Equipment):
                 self._prev_speed = self.speed_p
             
             current_time = int(time.time() * 1000)
-            if current_time - self._last_mb_send > 1000:
+            if current_time - self._last_mb_send > 5000:
                 self._modbus_client.write_register(
                     self.slave_addr,
                     2,
@@ -545,8 +549,6 @@ class EquipmentChain(SFC):
                 self.exec(self._stop() )
             else:
                 self.state=EquipmentChain.IDLE
-
-
 
 
 
