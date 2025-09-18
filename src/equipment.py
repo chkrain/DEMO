@@ -243,7 +243,7 @@ class EquipmentROT(Equipment):
     """Класс для управления оборудованием с датчиком вращения (конвейера, шнеки)"""
     rotating    = POU.var(False)
     rot         = POU.input(False, hidden = True)
-    speed_p     = POU.var(100, persistent=True)
+    speed_p     = POU.var(int(10))
     speed_msg   = POU.var('Ожидание значения скорости')
     slave_addr  = POU.var(1) 
     
@@ -257,8 +257,8 @@ class EquipmentROT(Equipment):
         self.slave_addr     = slave_addr
         self._modbus_client = ModbusClient()
         self._last_mb_send  = 0
-        self._prev_speed    = int(self.speed_p)
-        self.set_speed(int(self.speed_p))
+        self._prev_speed    = self.speed_p
+        self.set_speed(self.speed_p)
         self.subtasks       += (self._rotating, )
 
     def monitor(self, rot: bool):
@@ -347,11 +347,14 @@ class EquipmentDrum(Equipment):
         super().__init__(q=q, depends=depends, start=start, stop=stop, 
                          manual=None, fault=fault, **kwargs)
     
+        self._stop_trig = RTRIG(clk=lambda: not self.stop)  
+        self.subtasks += (self._stop_trig,)
+
     def set_start(self):
-        return self.on
+        return self.on or self.start
         
     def set_stop(self):
-        return self.off
+        return self.off or self._stop_trig.q
 
 class EquipmentPack(EquipmentROT):
     gate = POU.input(False)
@@ -363,28 +366,12 @@ class EquipmentPack(EquipmentROT):
     def set_start(self):
         base_start = super().set_start()
         if self.manual: result = self.gate and base_start
-        else: result = self.gate or base_start
+        else: result = self.gate and base_start
         return result
     
     def set_stop(self):
         base_stop = super().set_stop()
-        return not self.gate or base_stop
-    
-    def _allowed(self):
-        self.allowed = True
-        
-        if self.depends is not None and not self.manual:
-            for dep in self.depends:
-                if dep.state != Equipment.RUN:
-                    return False
-                if dep.fault: 
-                    self.allowed    = False
-                    self.er_msg     = f'{self.id} АВАРИЯ: трос у соседа'
-                    
-        self.allowed = not self.lock
-        
-        return self.allowed
-
+        return self.gate or base_stop
     
 class EquipmentAutoStart(Equipment):
     def __init__(self, auto_start_on=None, **kwargs):
@@ -508,8 +495,6 @@ class EquipmentChain(SFC):
         for gear in self.gears:
             gear.off = True
 
-        Burner.stop_cmd = True
-
         if telegram_monitor:
             telegram_monitor.send_message("🚨 СРАБОТАЛ АВАРИЙНЫЙ ОСТАНОВ ВСЕГО ОБОРУДОВАНИЯ")
 
@@ -518,7 +503,7 @@ class EquipmentChain(SFC):
         for gear in self.gears:
             gear.off = False
 
-        Burner.stop_cmd = False
+        # equipment off = true
 
         if telegram_monitor:
             telegram_monitor.send_message("✅ АВАРИЙНАЫЙ ОСТАНОВ СНЯТ")
@@ -632,10 +617,10 @@ class Burner(SFC):
             yield
 
 class Analog(SFC):
-    raw_value   = POU.input(0, persistent=True)        # Сырое значение из ПЛК 
-    value       = POU.output(0, persistent=True)       # То же значение для использования в программе
-    threshold   = POU.var(5, persistent=True)          # Порог изменения для уведомления (%)
-    _prev_value = POU.var(0, persistent=True)          # Предыдущее значение
+    raw_value   = POU.input(0)        # Сырое значение из ПЛК 
+    value       = POU.output(0)       # То же значение для использования в программе
+    threshold   = POU.var(5)          # Порог изменения для уведомления (%)
+    _prev_value = POU.var(0)          # Предыдущее значение
     _first_scan = POU.var(True)                        # Первый сканирование
     
     def __init__(self, id=None, parent=None, raw_value=None, threshold=5):

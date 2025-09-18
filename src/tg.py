@@ -14,20 +14,16 @@ class TelegramMonitor(POU):
         self.running = True
         self.lock = _thread.allocate_lock()
         
-        # Запускаем поток для отправки сообщений
         _thread.start_new_thread(self._send_messages_worker, ())
         
-        # Отправляем сообщение о запуске
         self.send_message("Бот в сети")
     
-    def send_message(self, message):
-        """Просто добавить сообщение в очередь"""       
+    def send_message(self, message):     
         full_message = f"{message}"
         with self.lock:
             self.message_queue.append(full_message)
     
     def _send_messages_worker(self):
-        """Рабочий поток для отправки сообщений"""
         while self.running:
             message = None
             with self.lock:
@@ -39,7 +35,6 @@ class TelegramMonitor(POU):
             time.sleep(1)
     
     def _send_telegram_message(self, message):
-        """Отправка сообщения в Telegram"""
         try:
             url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
             payload = {
@@ -54,5 +49,4 @@ class TelegramMonitor(POU):
             print(f"Ошибка при отправке сообщения: {e}")
     
     def stop(self):
-        """Остановка монитора"""
         self.running = False
