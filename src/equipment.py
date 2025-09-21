@@ -8,7 +8,7 @@ import time
 
 try:
     from tg import TelegramMonitor
-    telegram_monitor = TelegramMonitor(bot_token="8498968450:AAEwT6cGva0jNTAdSJPd0Z4jumP_ViitV-s", chat_id="-1003089235411")
+    telegram_monitor = TelegramMonitor(bot_token="", chat_id="")
 except Exception as e:
     print(f"Не удалось инициализировать Telegram бота: {e}")
     telegram_monitor = None
